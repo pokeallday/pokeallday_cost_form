@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#00A472">
+<title>포케올데이 비용 입력</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --brand: #00A472;
+    --brand-dark: #008A60;
+    --brand-light: #E6F7F0;
+    --text: #1F2937;
+    --text-sub: #6B7280;
+    --text-light: #9CA3AF;
+    --bg: #FFFFFF;
+    --bg-soft: #F9FAFB;
+    --border: #E5E7EB;
+    --error: #EF4444;
+    --up: #DC2626;
+    --up-bg: #FEF2F2;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 20px 24px calc(32px + env(safe-area-inset-bottom));
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .screen.active { display: flex; }
+  .screen.active.slide-from-right {
+    animation: slideFromRight 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .screen.active.slide-from-left {
+    animation: slideFromLeft 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes slideFromRight {
+    from { opacity: 0; transform: translateX(28px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideFromLeft {
+    from { opacity: 0; transform: translateX(-28px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    min-height: 32px;
+  }
+  .btn-back {
+    background: none;
+    border: none;
+    padding: 4px 8px 4px 0;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 300;
+    margin-left: -8px;
+  }
+  .btn-back:active { opacity: 0.6; }
+  .progress {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--brand);
+    border-radius: 2px;
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 0;
+  }
+  .progress-bar.pulse {
+    animation: progressPulse 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes progressPulse {
+    0% { filter: brightness(1); box-shadow: 0 0 0 0 rgba(0, 164, 114, 0); }
+    40% { filter: brightness(1.3); box-shadow: 0 0 8px 2px rgba(0, 164, 114, 0.35); }
+    100% { filter: brightness(1); box-shadow: 0 0 0 0 rgba(0, 164, 114, 0); }
+  }
+  .step-info {
+    font-size: 13px;
+    color: var(--text-sub);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Content */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .qlabel {
+    font-size: 14px;
+    color: var(--brand);
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+  }
+  .title {
+    font-size: 25px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.35;
+    margin: 0 0 10px;
+    letter-spacing: -0.4px;
+  }
+  .subtitle {
+    font-size: 14.5px;
+    color: var(--text-sub);
+    line-height: 1.55;
+    margin: 0 0 36px;
+  }
+
+  /* Text input */
+  .input-wrap { margin-bottom: 24px; }
+  .input {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    padding: 12px 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: inherit;
+    background: transparent;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+  }
+  .input:focus { border-bottom-color: var(--brand); }
+  .input::placeholder { color: var(--text-light); font-weight: 400; }
+
+  /* Amount input */
+  .input-amount-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    border-bottom: 2px solid var(--border);
+    transition: border-color 0.2s;
+    padding: 4px 0;
+  }
+  .input-amount-wrap:focus-within { border-bottom-color: var(--brand); }
+  .input-amount {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    padding: 10px 0;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: inherit;
+    background: transparent;
+    outline: none;
+    text-align: right;
+    -webkit-appearance: none;
+    appearance: none;
+    -moz-appearance: textfield;
+    letter-spacing: -0.3px;
+  }
+  .input-amount::-webkit-outer-spin-button,
+  .input-amount::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .input-amount::placeholder { color: var(--text-light); font-weight: 600; }
+  .currency {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-sub);
+  }
+  .prev-hint {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 10px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Helper card */
+  .helper {
+    background: var(--bg-soft);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: var(--text-sub);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .helper-title {
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+  }
+  .helper-warn {
+    background: #FFFBEB;
+    color: #78350F;
+    border: 1px solid #FDE68A;
+  }
+  .helper-warn .helper-title { color: #92400E; }
+  .helper-warn b { color: #78350F; font-weight: 700; }
+
+  /* Select */
+  .select-wrap { position: relative; margin-bottom: 24px; }
+  .select {
+    width: 100%;
+    padding: 16px 44px 16px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: inherit;
+    background: var(--bg);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .select:focus { border-color: var(--brand); }
+  .select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-70%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-sub);
+    border-bottom: 2px solid var(--text-sub);
+    pointer-events: none;
+  }
+
+  /* Footer / Button */
+  .footer { padding-top: 16px; }
+  .btn {
+    width: 100%;
+    padding: 18px 20px;
+    border: none;
+    border-radius: 14px;
+    background: var(--brand);
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.08s, opacity 0.25s, box-shadow 0.3s ease;
+    letter-spacing: -0.2px;
+    box-shadow: 0 4px 14px rgba(0, 164, 114, 0.22);
+  }
+  .btn:hover:not(:disabled) { background: var(--brand-dark); }
+  .btn:active:not(:disabled) { transform: scale(0.99); }
+  .btn:disabled {
+    background: var(--border);
+    color: var(--text-light);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .btn-secondary {
+    background: var(--bg-soft);
+    color: var(--text);
+    box-shadow: none;
+  }
+  .btn-secondary:hover:not(:disabled) { background: var(--border); }
+  .btn-secondary:not(:disabled) { box-shadow: none; }
+  .btn.btn-enable-anim {
+    animation: btnEnable 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes btnEnable {
+    0%   { transform: scale(0.96) translateY(2px); opacity: 0.7; }
+    60%  { transform: scale(1.015) translateY(0); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .btn-row { display: flex; gap: 8px; }
+
+  /* Welcome screen */
+  .welcome-hero { padding: 36px 0 24px; text-align: center; }
+  .welcome-emoji { font-size: 56px; margin-bottom: 12px; line-height: 1; }
+  .welcome-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .welcome-sub { font-size: 15px; color: var(--text-sub); line-height: 1.5; }
+  .month-label {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .field-block { margin-top: 18px; }
+
+  /* 세그먼트 컨트롤 (운영방식 선택) */
+  .segment-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .segment {
+    padding: 14px 6px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.08s ease;
+    text-align: center;
+    letter-spacing: -0.2px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .segment:hover { border-color: var(--text-light); }
+  .segment:active { transform: scale(0.98); }
+  .segment.active {
+    background: var(--brand-light);
+    border-color: var(--brand);
+    color: var(--brand-dark);
+  }
+  .segment-helper {
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.55;
+    padding: 0 2px;
+    min-height: 20px;
+  }
+  .segment-helper b { color: var(--text); font-weight: 700; }
+  .notice-box {
+    background: var(--brand-light);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 28px 0 8px;
+  }
+  .notice-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brand-dark);
+    margin-bottom: 10px;
+  }
+  .notice-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.75;
+  }
+  .notice-list li { margin-bottom: 2px; }
+  .notice-list b { font-weight: 700; }
+
+  /* Amount group (화면 9 묶음) */
+  .amount-group { margin-bottom: 22px; }
+  .amount-group:last-child { margin-bottom: 16px; }
+  .amount-group-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .amount-group-sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-sub);
+    margin-left: 4px;
+  }
+  .amount-group .input-amount { font-size: 24px; }
+  .amount-group .currency { font-size: 18px; }
+
+  /* Summary screen (화면 10) */
+  .summary-store {
+    background: var(--brand-light);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+  }
+  .summary-store-name {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--brand-dark);
+    letter-spacing: -0.3px;
+  }
+  .summary-store-month {
+    font-size: 13px;
+    color: var(--brand-dark);
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+  .summary-list {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .summary-item {
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-item:last-child { border-bottom: none; }
+  .summary-item-label {
+    font-size: 14px;
+    color: var(--text-sub);
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+  .summary-item-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .summary-item-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px;
+  }
+  .summary-item-diff {
+    font-size: 11.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary-item-diff.up { color: var(--up); background: var(--up-bg); }
+  .summary-item-diff.down { color: var(--brand-dark); background: var(--brand-light); }
+  .summary-item-edit {
+    background: none;
+    border: none;
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 6px;
+    margin-left: 4px;
+    border-radius: 6px;
+  }
+  .summary-item-edit:active { background: var(--brand-light); }
+  .summary-total {
+    background: var(--text);
+    color: white;
+    padding: 18px 20px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 24px;
+  }
+  .summary-total-label {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+  }
+  .summary-total-value {
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+  }
+  /* 요약 화면 staggered 등장 */
+  .screen[data-screen="11"].active .summary-store,
+  .screen[data-screen="11"].active .summary-item,
+  .screen[data-screen="11"].active .summary-total {
+    opacity: 0;
+    animation: summaryFadeUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes summaryFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Complete screen (화면 11) */
+  .complete-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+  }
+  .complete-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .complete-title {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .complete-sub {
+    font-size: 15px;
+    color: var(--text-sub);
+    line-height: 1.6;
+    max-width: 320px;
+  }
+
+  /* Modal (이상치 확인) */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: flex-end;
+    z-index: 100;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .modal-overlay.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--bg);
+    border-radius: 20px 20px 0 0;
+    padding: 28px 24px calc(24px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-emoji {
+    font-size: 32px;
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .modal-title {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+  .modal-body {
+    font-size: 14px;
+    color: var(--text-sub);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .modal-body b { color: var(--text); font-weight: 700; }
+  .modal-compare {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-sub);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-compare-arrow { color: var(--text-light); }
+
+  /* 매장명 확인 모달 — 후보 매장 선택 */
+  .store-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .store-option {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s, transform 0.05s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .store-option:hover {
+    background: var(--brand-light);
+    border-color: var(--brand);
+    color: var(--brand-dark);
+  }
+  .store-option:active { transform: scale(0.99); }
+
+  /* Toast (자동 복원 알림 등) */
+  .toast {
+    position: fixed;
+    bottom: 96px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: rgba(31, 41, 55, 0.94);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 24px;
+    font-size: 13.5px;
+    font-weight: 600;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    max-width: calc(100vw - 48px);
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ─── 화면 0: 시작 / 입력월 선택 ─── -->
+  <section class="screen active" data-screen="0">
+    <div class="content">
+      <div class="welcome-hero">
+        <div class="welcome-emoji">🥗</div>
+        <div class="welcome-title">포케올데이 비용 입력</div>
+        <div class="welcome-sub">매월 매장 운영 비용을 한 번에 입력해 주세요</div>
+      </div>
+
+      <div class="month-label">어느 달의 비용을 입력하시나요?</div>
+      <div class="select-wrap">
+        <select class="select" id="monthSelect" aria-label="입력월 선택"></select>
+      </div>
+
+      <div class="notice-box">
+        <div class="notice-title">입력 전 확인해 주세요</div>
+        <ul class="notice-list">
+          <li><b>대략적인 금액</b>으로 입력해 주셔도 괜찮아요 &mdash; 100원 단위까지 맞추지 않아도 돼요</li>
+          <li>금액은 <b>원 단위</b>로 입력해 주세요 (천 단위 콤마는 자동)</li>
+          <li>해당 항목이 없으면 <b>0원</b>으로 입력해 주세요</li>
+          <li>입력은 약 <b>2~3분</b> 정도 걸려요</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="startBtn" onclick="goNext()">시작하기</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 1: 매장명 ─── -->
+  <section class="screen" data-screen="1">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">1 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q1.</div>
+      <h1 class="title">매장명을 입력해 주세요</h1>
+      <p class="subtitle">예) 신사점, 강남점, 부산서면점</p>
+
+      <div class="input-wrap">
+        <input type="text" class="input" id="storeNameInput" placeholder="○○점" autocomplete="off" inputmode="text">
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="storeNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 2: 운영 방식 ─── -->
+  <section class="screen" data-screen="2">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">2 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q2. 매장 운영 방식</div>
+      <h1 class="title">매장은 어떻게<br>운영되고 있나요?</h1>
+      <p class="subtitle">지금 운영 중인 방식에 가까운 항목을 선택해 주세요</p>
+
+      <div class="segment-group" role="radiogroup" aria-label="운영 방식">
+        <button type="button" class="segment" data-value="full-auto">풀오토</button>
+        <button type="button" class="segment" data-value="semi-auto">반오토</button>
+        <button type="button" class="segment" data-value="owner-solo">점주 풀근무</button>
+      </div>
+      <div class="segment-helper" id="modeHelper">운영 방식을 선택해 주세요</div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="modeNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 3: 인건비 ─── -->
+  <section class="screen" data-screen="3">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">3 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q3. 인건비</div>
+      <h1 class="title">이번 달 인건비는<br>얼마였나요?</h1>
+      <p class="subtitle">직원 · 알바생에게 실제 지급한 급여</p>
+
+      <div class="input-wrap">
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="laborInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="laborPrev"></div>
+      </div>
+
+      <div class="helper helper-warn">
+        <div class="helper-title">⚠️ 점주 본인 인건비는 빼주세요</div>
+        본인의 <b>자가 인건비</b>(점주 급여)는 제외하고, 직원 · 알바생에게 지급한 인건비만 합산해서 입력해 주세요.
+      </div>
+
+      <div class="helper">
+        <div class="helper-title">💡 어디서 확인하나요?</div>
+        급여 이체 내역, 알바생 일급 합계, 또는 회계 장부의 인건비 항목
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="laborNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 4: 4대보험 ─── -->
+  <section class="screen" data-screen="4">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">4 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q4. 4대보험</div>
+      <h1 class="title">4대보험은 얼마였나요?</h1>
+      <p class="subtitle">건강보험 · 국민연금 · 고용보험 · 산재보험</p>
+
+      <div class="input-wrap">
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="insuranceInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="insurancePrev"></div>
+      </div>
+
+      <div class="helper">
+        <div class="helper-title">💡 어디서 확인하나요?</div>
+        4대 사회보험 정보연계센터(<b>www.4insure.or.kr</b>) 또는 자동이체 내역
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="insuranceNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 5: 외부 식자재 ─── -->
+  <section class="screen" data-screen="5">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">5 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q5. 본사 외 식자재</div>
+      <h1 class="title">본사 외 식자재 구매는<br>얼마였나요?</h1>
+      <p class="subtitle">본사(도래미 · 발주고) 외에서 별도로 구매한 식자재</p>
+
+      <div class="input-wrap">
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="foodInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="foodPrev"></div>
+      </div>
+
+      <div class="helper">
+        <div class="helper-title">💡 어디서 확인하나요?</div>
+        본사(도래미 · 발주고) 발주가 아닌 식자재 구매 모두 포함해 주세요.<br>
+        · <b>오프라인</b> — 마트 · 시장 · 소상공인 발주<br>
+        · <b>온라인</b> — 쿠팡 · 마켓컬리 · 네이버 쇼핑 등
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="foodNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 6: 배달대행료 ─── -->
+  <section class="screen" data-screen="6">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">6 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q6. 배달대행료</div>
+      <h1 class="title">배달대행료는 얼마였나요?</h1>
+      <p class="subtitle">매장에서 직접 계약한 배달대행 업체에 지불한 금액 (월회비 + 충전금)</p>
+
+      <div class="input-wrap">
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="deliveryInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="deliveryPrev"></div>
+      </div>
+
+      <div class="helper helper-warn">
+        <div class="helper-title">⚠️ 배민·쿠팡 자체 배달 라이더비는 빼주세요</div>
+        <b>배민 배달 · 쿠팡이츠 배달</b> 등 배달앱이 자체 처리하는 라이더비는 제외하고, 매장에서 <b>직접 계약한 배달대행 업체</b>에 지불한 금액만 입력해 주세요.
+      </div>
+
+      <div class="helper">
+        <div class="helper-title">💡 어디서 확인하나요?</div>
+        부릉 · 바로고 · 생각대로 등 배달대행 업체 청구서 (월회비 + 충전금 합산)
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="deliveryNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 7: 공과금 ─── -->
+  <section class="screen" data-screen="7">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">7 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q7. 공과금</div>
+      <h1 class="title">공과금은 얼마였나요?</h1>
+      <p class="subtitle">별도로 청구되는 전기 · 수도 · 가스의 합계</p>
+
+      <div class="input-wrap">
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="utilityInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="utilityPrev"></div>
+      </div>
+
+      <div class="helper helper-warn">
+        <div class="helper-title">⚠️ 관리비에 포함된 항목은 빼주세요</div>
+        전기 · 수도 · 가스 중에서 <b>건물 관리비에 합산되어 청구되는 항목</b>은 제외하고, <b>별도로 과금되는 항목</b>만 합산해서 입력해 주세요.<br>
+        <span style="display:inline-block;margin-top:6px">예) 전기 · 수도는 별도 청구, 가스는 관리비에 합산 → <b>전기 + 수도</b>만 입력</span>
+      </div>
+
+      <div class="helper">
+        <div class="helper-title">💡 어디서 확인하나요?</div>
+        한전 · 수도사업소 · 도시가스 고지서 또는 자동이체 내역<br>
+        <span style="color:var(--text-light)">※ 세금은 다음 화면에서 입력해요</span>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="utilityNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 8: 임대료 ─── -->
+  <section class="screen" data-screen="8">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">8 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q8. 임대료</div>
+      <h1 class="title">이번 달 임대료는<br>얼마였나요?</h1>
+      <p class="subtitle">매장 임대료(월세) 실제 지급액</p>
+
+      <div class="input-wrap">
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="rentInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="rentPrev"></div>
+      </div>
+
+      <div class="helper helper-warn">
+        <div class="helper-title">⚠️ 임대료에 관리비가 포함되어 있다면?</div>
+        임대 계약서에 <b>월세 + 관리비</b>가 합쳐서 청구되는 경우, 여기서는 <b>월세 부분만</b> 입력해 주세요. 분리가 어렵다면 합산 금액을 입력하고 다음 [건물관리비] 화면은 <b>0원</b>으로 처리해도 괜찮아요.
+      </div>
+
+      <div class="helper">
+        <div class="helper-title">💡 어디서 확인하나요?</div>
+        임대 계약서에 명시된 월세 금액 또는 자동이체 내역
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="rentNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 9: 건물관리비 ─── -->
+  <section class="screen" data-screen="9">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">9 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q9. 건물관리비</div>
+      <h1 class="title">건물관리비는 얼마였나요?</h1>
+      <p class="subtitle">관리사무소 청구 금액</p>
+
+      <div class="input-wrap">
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="buildingInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="buildingPrev"></div>
+      </div>
+
+      <div class="helper">
+        <div class="helper-title">💡 어디서 확인하나요?</div>
+        건물 관리사무소 월 청구서 또는 자동이체 내역<br>
+        <span style="color:var(--text-light)">※ 공과금(전기 · 수도 · 가스) 중 일부가 관리비에 합산되어 청구되면, 청구서 총액 그대로 입력해 주세요. 따로 분리할 필요 없어요.</span>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="buildingNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 10: 기타 항목 ─── -->
+  <section class="screen" data-screen="10">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">10 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">Q10. 기타 항목</div>
+      <h1 class="title">마지막으로,<br>기타 항목을 알려주세요</h1>
+      <p class="subtitle">그 외 운영 비용 4가지 (없으면 0원으로 입력)</p>
+
+      <div class="amount-group">
+        <div class="amount-group-label">보험/세무 <span class="amount-group-sub">화재보험료 + 세무기장료</span></div>
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="insurance_taxInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="insurance_taxPrev"></div>
+      </div>
+
+      <div class="amount-group">
+        <div class="amount-group-label">렌탈료 <span class="amount-group-sub">커피머신·정수기·캡스·키오스크·인터넷 등</span></div>
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="rentalInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="rentalPrev"></div>
+      </div>
+
+      <div class="amount-group">
+        <div class="amount-group-label">소모품비 <span class="amount-group-sub">쓰레기봉투 등 기타 소모품</span></div>
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="suppliesInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="suppliesPrev"></div>
+      </div>
+
+      <div class="amount-group">
+        <div class="amount-group-label">기타 비용 <span class="amount-group-sub">광고비 · 교육비 · 잡비 등 위 항목 외</span></div>
+        <div class="input-amount-wrap">
+          <input type="text" inputmode="numeric" class="input-amount" id="etcInput" placeholder="0" autocomplete="off">
+          <span class="currency">원</span>
+        </div>
+        <div class="prev-hint hidden" id="etcPrev"></div>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="fixedNextBtn" disabled onclick="goNext()">다음</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 11: 확인 + 제출 ─── -->
+  <section class="screen" data-screen="11">
+    <div class="header">
+      <button class="btn-back" onclick="goPrev()" aria-label="뒤로">‹</button>
+      <div class="progress"><div class="progress-bar"></div></div>
+      <div class="step-info">11 / 11</div>
+    </div>
+    <div class="content">
+      <div class="qlabel">마지막 확인</div>
+      <h1 class="title">입력 내용을 확인해 주세요</h1>
+      <p class="subtitle">잘못된 항목이 있으면 [수정]을 눌러주세요</p>
+
+      <div class="summary-store">
+        <div class="summary-store-name" id="summaryStore">매장명</div>
+        <div class="summary-store-month" id="summaryMonth">YYYY년 M월</div>
+      </div>
+
+      <div class="summary-list" id="summaryList"></div>
+
+      <div class="summary-total">
+        <span class="summary-total-label">총 운영 비용</span>
+        <span class="summary-total-value" id="summaryTotal">0원</span>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn" id="submitBtn" onclick="submitForm()">제출하기</button>
+    </div>
+  </section>
+
+  <!-- ─── 화면 12: 제출 완료 ─── -->
+  <section class="screen" data-screen="12">
+    <div class="content">
+      <div class="complete-hero">
+        <div class="complete-icon">✓</div>
+        <div class="complete-title">제출이 완료되었어요</div>
+        <div class="complete-sub">
+          이번 달 운영 진단 리포트는<br>
+          다음 주 중 카카오톡으로<br>
+          전달드릴 예정이에요.
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn btn-secondary" onclick="location.reload()">처음으로</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ─── 이상치 확인 모달 ─── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-emoji">🤔</div>
+    <div class="modal-title" id="modalTitle">한 번만 확인해 주세요</div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="rejectAnomaly()">수정할게요</button>
+      <button class="btn" onclick="confirmAnomaly()">네, 맞아요</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── 매장명 확인 모달 ─── -->
+<div class="modal-overlay" id="storeConfirmOverlay">
+  <div class="modal">
+    <div class="modal-emoji">🏪</div>
+    <div class="modal-title">매장명을 확인해 주세요</div>
+    <div class="modal-body" id="storeConfirmBody"></div>
+    <div class="store-options" id="storeConfirmOptions"></div>
+    <button class="btn btn-secondary" id="storeConfirmKeep">입력한 그대로 사용</button>
+  </div>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════
+  // 설정
+  // ═══════════════════════════════════════════════════════════
+  // Google Apps Script Web App URL (Step 2 배포 결과)
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwh4fpveSQRXqEmNPLiilBfMRJ0kSTggn_XocsptG4KgVQdIE-H47x5-5ShrdqJ6uJQ/exec';
+
+  const TOTAL_STEPS = 11;       // 진행률 표시용 (입력 단계 수)
+  const SUMMARY_SCREEN = 11;    // 확인+제출 화면
+  const COMPLETE_SCREEN = 12;   // 제출 완료 화면
+  const ANOMALY_THRESHOLD = 30; // %
+
+  // 비용 항목 정의 (단일 진실의 원천)
+  const FIELDS = [
+    { key: 'labor',         label: '인건비',       screen: 3, btn: 'laborNextBtn' },
+    { key: 'insurance',     label: '4대보험',      screen: 4, btn: 'insuranceNextBtn' },
+    { key: 'food',          label: '외부 식자재',  screen: 5, btn: 'foodNextBtn' },
+    { key: 'delivery',      label: '배달대행료',   screen: 6, btn: 'deliveryNextBtn' },
+    { key: 'utility',       label: '공과금',       screen: 7, btn: 'utilityNextBtn' },
+    { key: 'rent',          label: '임대료',       screen: 8, btn: 'rentNextBtn' },
+    { key: 'building',      label: '건물관리비',   screen: 9, btn: 'buildingNextBtn' },
+    { key: 'insurance_tax', label: '보험/세무',    screen: 10, btn: 'fixedNextBtn' },
+    { key: 'rental',        label: '렌탈료',       screen: 10, btn: 'fixedNextBtn' },
+    { key: 'supplies',      label: '소모품비',     screen: 10, btn: 'fixedNextBtn' },
+    { key: 'etc',           label: '기타 비용',    screen: 10, btn: 'fixedNextBtn' },
+  ];
+  const FIELDS_BY_KEY = Object.fromEntries(FIELDS.map(f => [f.key, f]));
+  const FIELDS_BY_SCREEN = FIELDS.reduce((acc, f) => {
+    (acc[f.screen] = acc[f.screen] || []).push(f);
+    return acc;
+  }, {});
+
+  // 매장 운영 방식
+  const MODE_LABELS = {
+    'full-auto':  '풀오토',
+    'semi-auto':  '반오토',
+    'owner-solo': '점주 풀근무',
+  };
+  const MODE_INFO = {
+    'full-auto':  '점주는 거의 출근하지 않고 <b>직원이 운영</b>하는 매장',
+    'semi-auto':  '점주가 <b>일부 시간 함께</b> 운영하는 매장',
+    'owner-solo': '점주가 영업시간 <b>대부분 직접 운영</b>하는 매장',
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // 상태
+  // ═══════════════════════════════════════════════════════════
+  const state = {
+    current: 0,
+    history: [0],
+    data: { storeId: '', storeName: '', month: '', operationMode: '' },
+    prev: {},
+    editReturnTo: null,        // [수정] 후 돌아갈 화면 (요약 화면 번호)
+    anomalyAcknowledged: {},   // 키별로 사용자가 "맞아요" 확인한 화면 → 재진입 방지
+    pendingAnomaly: null,      // 모달 표시 중인 화면 번호 (확인 후 진행 위해)
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // URL 파라미터
+  // ═══════════════════════════════════════════════════════════
+  function parseUrlParams() {
+    const p = new URLSearchParams(window.location.search);
+    state.data.storeId = p.get('storeId') || '';
+    state.data.storeName = p.get('store') || '';
+    state.data.month = p.get('month') || '';
+
+    const mode = p.get('mode');
+    if (mode && MODE_LABELS[mode]) {
+      state.data.operationMode = mode;
+    }
+
+    FIELDS.forEach(f => {
+      const v = p.get('prev_' + f.key);
+      if (v !== null && v !== '' && !isNaN(v)) {
+        state.prev[f.key] = parseInt(v, 10);
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 입력월 드롭다운 (지난달 ~ 6개월 전)
+  // ═══════════════════════════════════════════════════════════
+  function populateMonths() {
+    const select = document.getElementById('monthSelect');
+    const now = new Date();
+    const options = [];
+    // 이번 달부터 5개월 전까지 (총 6개). 기본 선택은 지난달(i=1).
+    for (let i = 0; i <= 5; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      options.push({
+        value: `${y}-${m}`,
+        label: `${y}년 ${parseInt(m, 10)}월`,
+      });
+    }
+    select.innerHTML = options
+      .map((o, i) => `<option value="${o.value}" ${i === 1 ? 'selected' : ''}>${o.label}</option>`)
+      .join('');
+
+    if (state.data.month) {
+      if (![...select.options].some(o => o.value === state.data.month)) {
+        const [y, m] = state.data.month.split('-');
+        const opt = document.createElement('option');
+        opt.value = state.data.month;
+        opt.textContent = `${y}년 ${parseInt(m, 10)}월`;
+        select.insertBefore(opt, select.firstChild);
+      }
+      select.value = state.data.month;
+    } else {
+      state.data.month = select.value;
+    }
+    select.addEventListener('change', e => { state.data.month = e.target.value; });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 운영 방식 (세그먼트 컨트롤)
+  // ═══════════════════════════════════════════════════════════
+  function selectMode(value) {
+    if (!MODE_LABELS[value]) return;
+    state.data.operationMode = value;
+    document.querySelectorAll('.segment-group .segment').forEach(s => {
+      s.classList.toggle('active', s.dataset.value === value);
+    });
+    const helper = document.getElementById('modeHelper');
+    if (helper) helper.innerHTML = MODE_INFO[value];
+    // 운영 방식 화면(2)에 있을 때만 다음 버튼 활성화 신호
+    const btn = document.getElementById('modeNextBtn');
+    if (btn) setBtnEnabled(btn, true);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 숫자 포맷
+  // ═══════════════════════════════════════════════════════════
+  function formatNumber(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function parseNumber(s) {
+    if (s == null) return null;
+    const cleaned = String(s).replace(/[^\d]/g, '');
+    return cleaned === '' ? null : parseInt(cleaned, 10);
+  }
+  function attachAmountFormatter(inputId, onChange) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const fieldKey = inputId.replace(/Input$/, '');
+
+    el.addEventListener('input', () => {
+      const cursorPos = el.selectionStart;
+      const before = el.value;
+      const cleaned = before.replace(/[^\d]/g, '');
+      const formatted = cleaned === '' ? '' : formatNumber(parseInt(cleaned, 10));
+      el.value = formatted;
+      let newPos = cursorPos + (formatted.length - before.length);
+      if (newPos < 0) newPos = 0;
+      if (newPos > formatted.length) newPos = formatted.length;
+      try { el.setSelectionRange(newPos, newPos); } catch (e) {}
+
+      // prev 값과 비교 → 다르면 hint 표시, 같으면 숨김
+      updatePrevHintVisibility(fieldKey);
+
+      if (onChange) onChange();
+    });
+
+    // 포커스 시 전체 선택 (prev 값 빠르게 새 값으로 교체 가능)
+    el.addEventListener('focus', () => {
+      setTimeout(() => { try { el.select(); } catch (e) {} }, 0);
+    });
+  }
+
+  function updatePrevHintVisibility(fieldKey) {
+    const hint = document.getElementById(fieldKey + 'Prev');
+    if (!hint) return;
+    const prev = state.prev[fieldKey];
+    if (prev == null) {
+      hint.classList.add('hidden');
+      return;
+    }
+    const input = document.getElementById(fieldKey + 'Input');
+    const curr = input ? parseNumber(input.value) : null;
+    if (curr === null || curr !== prev) {
+      hint.classList.remove('hidden');
+    } else {
+      hint.classList.add('hidden');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // localStorage 저장/복원 (같은 매장+월 재방문 시 자동 채움)
+  // ═══════════════════════════════════════════════════════════
+  const STORAGE_PREFIX = 'pokeallday_form_v1';
+  const STORAGE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30일
+
+  function getStorageKey() {
+    const store = state.data.storeId || state.data.storeName;
+    const month = state.data.month;
+    if (!store || !month) return null;
+    return `${STORAGE_PREFIX}:${store}:${month}`;
+  }
+
+  function saveState() {
+    const key = getStorageKey();
+    if (!key) return;
+    try {
+      const payload = {
+        storeName: state.data.storeName,
+        storeId: state.data.storeId,
+        month: state.data.month,
+        operationMode: state.data.operationMode,
+        data: {},
+        savedAt: Date.now(),
+      };
+      FIELDS.forEach(f => {
+        if (state.data[f.key] != null) payload.data[f.key] = state.data[f.key];
+      });
+      localStorage.setItem(key, JSON.stringify(payload));
+    } catch (e) { /* private mode 등 무시 */ }
+  }
+
+  function loadStored() {
+    const key = getStorageKey();
+    if (!key) return false;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      // TTL 체크
+      if (!parsed.savedAt || Date.now() - parsed.savedAt > STORAGE_TTL_MS) {
+        localStorage.removeItem(key);
+        return false;
+      }
+      let restoredCount = 0;
+      // 운영 방식 복원 (URL이 비어 있을 때만)
+      if (parsed.operationMode && !state.data.operationMode && MODE_LABELS[parsed.operationMode]) {
+        state.data.operationMode = parsed.operationMode;
+        selectMode(parsed.operationMode);
+        restoredCount++;
+      }
+      FIELDS.forEach(f => {
+        const v = parsed.data && parsed.data[f.key];
+        if (v != null && state.data[f.key] == null) {
+          state.data[f.key] = v;
+          const el = document.getElementById(f.key + 'Input');
+          if (el) el.value = formatNumber(v);
+          restoredCount++;
+        }
+      });
+      return restoredCount > 0;
+    } catch (e) { return false; }
+  }
+
+  function clearStored() {
+    const key = getStorageKey();
+    if (!key) return;
+    try { localStorage.removeItem(key); } catch (e) {}
+  }
+
+  function showToast(msg) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toast';
+      toast.className = 'toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 매장 마스터 fetch + 매장명 정규화/매칭
+  // ═══════════════════════════════════════════════════════════
+  async function fetchStoreMaster() {
+    if (state.storeMaster) return state.storeMaster; // 캐시
+    try {
+      const url = APPS_SCRIPT_URL + '?action=stores';
+      const response = await fetch(url, { method: 'GET', redirect: 'follow' });
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (!data || !data.success || !Array.isArray(data.data)) return null;
+      state.storeMaster = data.data;
+      return state.storeMaster;
+    } catch (err) {
+      console.log('매장 마스터 조회 실패:', err.message);
+      return null;
+    }
+  }
+
+  function normalizeStoreName(name) {
+    // 공백/구분문자/괄호 제거, 소문자화
+    return String(name || '').replace(/[\s\-·~,.()\[\]]/g, '').trim().toLowerCase();
+  }
+
+  function levenshtein(a, b) {
+    if (a === b) return 0;
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const m = [];
+    for (let i = 0; i <= b.length; i++) m[i] = [i];
+    for (let j = 0; j <= a.length; j++) m[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          m[i][j] = m[i - 1][j - 1];
+        } else {
+          m[i][j] = Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+        }
+      }
+    }
+    return m[b.length][a.length];
+  }
+
+  // 매칭 결과: { match: 'exact'|'partial'|'fuzzy', stores: [...] } 또는 null
+  function findMatchingStores(input, master) {
+    if (!input || !master || master.length === 0) return null;
+    const normInput = normalizeStoreName(input);
+    if (!normInput) return null;
+
+    // 1) 정확 일치 (정규화 후)
+    const exact = master.find(s => normalizeStoreName(s.name) === normInput);
+    if (exact) return { match: 'exact', stores: [exact] };
+
+    // 2) 부분 일치 (포함 관계)
+    const partial = master.filter(s => {
+      const norm = normalizeStoreName(s.name);
+      return norm && (norm.includes(normInput) || normInput.includes(norm));
+    });
+    if (partial.length > 0) return { match: 'partial', stores: partial.slice(0, 5) };
+
+    // 3) Fuzzy (Levenshtein 유사도 60% 이상)
+    const scored = master.map(s => {
+      const norm = normalizeStoreName(s.name);
+      const dist = levenshtein(normInput, norm);
+      const maxLen = Math.max(normInput.length, norm.length);
+      const score = maxLen === 0 ? 0 : 1 - (dist / maxLen);
+      return { store: s, score: score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    const good = scored.filter(s => s.score >= 0.6);
+    if (good.length === 0) return null;
+    return { match: 'fuzzy', stores: good.slice(0, 3).map(s => s.store) };
+  }
+
+  // 매장명 검증/보정 (비동기). 반환값: 최종 사용할 매장명
+  async function validateStoreName(rawName) {
+    const master = await fetchStoreMaster();
+    if (!master || master.length === 0) return rawName;
+
+    const result = findMatchingStores(rawName, master);
+    if (!result) return rawName;                          // 매칭 실패 → 원본
+    if (result.match === 'exact') return result.stores[0].name; // 정확 → 표준명
+
+    // partial / fuzzy → 사용자 확인 모달
+    const chosen = await showStoreConfirmModal(rawName, result.stores);
+    return chosen || rawName;
+  }
+
+  let _storeConfirmResolve = null;
+  function showStoreConfirmModal(rawInput, candidates) {
+    return new Promise(resolve => {
+      _storeConfirmResolve = resolve;
+
+      document.getElementById('storeConfirmBody').innerHTML =
+        '입력하신 <b>"' + escapeHtml(rawInput) + '"</b>이(가) 다음 매장과 비슷해요.<br>정확한 매장을 선택해 주세요.';
+
+      const optionsEl = document.getElementById('storeConfirmOptions');
+      optionsEl.innerHTML = '';
+      candidates.forEach(store => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'store-option';
+        btn.textContent = store.name;
+        btn.addEventListener('click', () => resolveStoreConfirm(store.name));
+        optionsEl.appendChild(btn);
+      });
+
+      document.getElementById('storeConfirmOverlay').classList.add('active');
+    });
+  }
+
+  function resolveStoreConfirm(value) {
+    document.getElementById('storeConfirmOverlay').classList.remove('active');
+    if (_storeConfirmResolve) {
+      const r = _storeConfirmResolve;
+      _storeConfirmResolve = null;
+      r(value); // null이면 원본 그대로
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 백엔드에서 직전 달 데이터 자동 조회 (매장명 + 월 확정 직후 호출)
+  // ═══════════════════════════════════════════════════════════
+  async function fetchPreviousData() {
+    if (!state.data.storeName || !state.data.month) return;
+    // URL prefill로 이미 prev 값이 들어와 있으면 스킵 (본사가 의도적으로 보낸 케이스 우선)
+    if (Object.keys(state.prev).length > 0) return;
+
+    try {
+      const url = APPS_SCRIPT_URL +
+        '?action=previous' +
+        '&store=' + encodeURIComponent(state.data.storeId || state.data.storeName) +
+        '&month=' + encodeURIComponent(state.data.month);
+
+      const response = await fetch(url, { method: 'GET', redirect: 'follow' });
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (!data || !data.success || !data.data) return;
+
+      // 응답 객체 key: prev_labor, prev_insurance, ... → state.prev + input.value에 prefill
+      let filledCount = 0;
+      Object.keys(data.data).forEach(rawKey => {
+        const fieldKey = rawKey.replace(/^prev_/, '');
+        const val = data.data[rawKey];
+        if (val === null || val === '' || isNaN(val)) return;
+        const num = parseInt(val, 10);
+        state.prev[fieldKey] = num;
+
+        // prev hint는 기본적으로 숨김 (input에 값이 들어가 있으니 중복 정보).
+        // 점주가 값을 변경하면 input 핸들러가 다시 표시함.
+        const hint = document.getElementById(fieldKey + 'Prev');
+        if (hint) {
+          hint.textContent = '지난달 ' + formatNumber(num) + '원';
+          hint.classList.add('hidden');
+        }
+
+        // input이 비어 있을 때만 prev 값을 미리 채움 (localStorage 복원값을 덮지 않음)
+        const input = document.getElementById(fieldKey + 'Input');
+        if (input && input.value === '') {
+          input.value = formatNumber(num);
+          state.data[fieldKey] = num;
+          filledCount++;
+        }
+      });
+
+      // 자동 채움 발생 시 다음 버튼 활성화 재체크 + 안내 토스트
+      if (filledCount > 0) {
+        recheckCurrentScreen();
+        showToast('지난달 값이 자동으로 채워졌어요');
+      }
+    } catch (err) {
+      // 네트워크 오류는 조용히 무시 (비교 기능 없이 폼은 정상 동작)
+      console.log('전월 데이터 조회 실패 (무시):', err.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 사전 채움
+  // ═══════════════════════════════════════════════════════════
+  function applyPrefill() {
+    if (state.data.storeName) {
+      document.getElementById('storeNameInput').value = state.data.storeName;
+    }
+    FIELDS.forEach(f => {
+      const prev = state.prev[f.key];
+      if (prev != null) {
+        const hint = document.getElementById(f.key + 'Prev');
+        if (hint) {
+          hint.textContent = `지난달 ${formatNumber(prev)}원`;
+          hint.classList.remove('hidden');
+        }
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 화면 전환
+  // ═══════════════════════════════════════════════════════════
+  function showScreen(n, direction) {
+    direction = direction || 'forward';
+    document.querySelectorAll('.screen').forEach(s => {
+      s.classList.remove('active', 'slide-from-right', 'slide-from-left');
+    });
+    const target = document.querySelector(`.screen[data-screen="${n}"]`);
+    if (!target) return;
+    target.classList.add('active');
+    target.classList.add(direction === 'backward' ? 'slide-from-left' : 'slide-from-right');
+    state.current = n;
+    window.scrollTo(0, 0);
+
+    if (n > 0 && n <= TOTAL_STEPS) {
+      const bar = target.querySelector('.progress-bar');
+      const info = target.querySelector('.step-info');
+      const pct = Math.min(100, Math.round((n / TOTAL_STEPS) * 100));
+      if (bar) {
+        // 진행률 바 펄스 재시작
+        bar.classList.remove('pulse');
+        void bar.offsetWidth;
+        bar.classList.add('pulse');
+        setTimeout(() => { bar.style.width = pct + '%'; }, 30);
+      }
+      if (info) info.textContent = `${n} / ${TOTAL_STEPS}`;
+    }
+
+    // 요약 화면 진입 시 렌더링
+    if (n === SUMMARY_SCREEN) renderSummary();
+
+    // 자동 포커스 (모달이 떠 있지 않은 경우에만)
+    if (!document.getElementById('modalOverlay').classList.contains('active')) {
+      const input = target.querySelector('.input, .input-amount');
+      if (input) setTimeout(() => input.focus({ preventScroll: true }), 320);
+    }
+
+    recheckCurrentScreen();
+  }
+
+  async function goNext() {
+    // 화면 1: 매장명 검증 + 마스터 매칭 (비동기)
+    if (state.current === 1) {
+      const input = document.getElementById('storeNameInput');
+      const rawName = input.value.trim();
+      if (!rawName) return;
+
+      // 마스터 매칭 → 필요 시 확인 모달
+      const finalName = await validateStoreName(rawName);
+      if (finalName && finalName !== rawName) {
+        input.value = finalName;
+        showToast('매장명을 "' + finalName + '"으로 보정했어요');
+      }
+      state.data.storeName = finalName || rawName;
+
+      // 저장 데이터 복원 시도 (URL store 없이 직접 입력한 경우)
+      if (!state.restoreAttempted) {
+        state.restoreAttempted = true;
+        if (loadStored()) showToast('이전 입력 내용을 불러왔어요');
+      }
+      // 백엔드에서 직전 달 데이터 자동 조회 (백그라운드)
+      fetchPreviousData();
+
+      advance();
+      return;
+    }
+
+    if (!validateCurrentScreen()) return;
+    if (!checkAnomalyOnCurrent()) return; // 이상치 모달 떠 있으면 멈춤
+
+    advance();
+  }
+
+  function advance() {
+    // 화면 이동 직전에 진행 상태 저장 (매장+월이 확정된 이후부터)
+    saveState();
+
+    // [수정] 모드: 요약 화면으로 복귀
+    if (state.editReturnTo != null) {
+      const ret = state.editReturnTo;
+      state.editReturnTo = null;
+      state.history.push(ret);
+      showScreen(ret, 'forward');
+      return;
+    }
+    const next = state.current + 1;
+    if (next > COMPLETE_SCREEN) return;
+    state.history.push(next);
+    showScreen(next, 'forward');
+  }
+
+  function goPrev() {
+    if (state.history.length > 1) {
+      state.history.pop();
+      showScreen(state.history[state.history.length - 1], 'backward');
+    }
+  }
+
+  function jumpToScreen(n) {
+    state.editReturnTo = state.current; // 보통 SUMMARY_SCREEN
+    state.history.push(n);
+    showScreen(n, 'forward');
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 검증
+  // ═══════════════════════════════════════════════════════════
+  function validateCurrentScreen() {
+    if (state.current === 0) {
+      state.data.month = document.getElementById('monthSelect').value;
+      return true;
+    }
+    // 화면 1(매장명)은 goNext에서 비동기로 별도 처리
+    if (state.current === 2) {
+      if (!state.data.operationMode) return false;
+      return true;
+    }
+    const fields = FIELDS_BY_SCREEN[state.current];
+    if (fields) {
+      for (const f of fields) {
+        const v = parseNumber(document.getElementById(f.key + 'Input').value);
+        if (v == null) return false;
+        state.data[f.key] = v;
+      }
+      return true;
+    }
+    return true; // SUMMARY, COMPLETE 등
+  }
+
+  function setBtnEnabled(btn, enabled) {
+    if (!btn) return;
+    const wasDisabled = btn.disabled;
+    btn.disabled = !enabled;
+    // disabled → enabled로 전환되는 순간에만 살짝 등장 애니메이션
+    if (wasDisabled && enabled) {
+      btn.classList.remove('btn-enable-anim');
+      void btn.offsetWidth;
+      btn.classList.add('btn-enable-anim');
+    }
+  }
+
+  function recheckCurrentScreen() {
+    if (state.current === 1) {
+      const v = document.getElementById('storeNameInput').value.trim();
+      setBtnEnabled(document.getElementById('storeNextBtn'), v.length > 0);
+      return;
+    }
+    if (state.current === 2) {
+      setBtnEnabled(document.getElementById('modeNextBtn'), !!state.data.operationMode);
+      return;
+    }
+    const fields = FIELDS_BY_SCREEN[state.current];
+    if (fields) {
+      const btnId = fields[0].btn;
+      const allFilled = fields.every(f => parseNumber(document.getElementById(f.key + 'Input').value) != null);
+      setBtnEnabled(document.getElementById(btnId), allFilled);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 이상치 체크 (±20%)
+  // ═══════════════════════════════════════════════════════════
+  function checkAnomalyOnCurrent() {
+    const fields = FIELDS_BY_SCREEN[state.current];
+    if (!fields) return true;
+
+    for (const f of fields) {
+      if (state.anomalyAcknowledged[f.key + '_' + state.data[f.key]]) continue;
+      const prev = state.prev[f.key];
+      const curr = state.data[f.key];
+      if (prev == null || prev === 0) continue; // 첫 입력 또는 지난달 0원이면 스킵
+      const diff = curr - prev;
+      const pct = (diff / prev) * 100;
+      if (Math.abs(pct) >= ANOMALY_THRESHOLD) {
+        showAnomalyModal(f.key, prev, curr, pct);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function showAnomalyModal(key, prev, curr, pct) {
+    state.pendingAnomaly = { key, curr };
+    const label = FIELDS_BY_KEY[key].label;
+    const direction = pct > 0 ? '늘었는데' : '줄었는데';
+    const pctStr = Math.abs(Math.round(pct));
+
+    document.getElementById('modalTitle').textContent = '한 번만 확인해 주세요';
+    document.getElementById('modalBody').innerHTML =
+      `<b>${label}</b>가 지난달보다 <b>${pctStr}% ${direction}</b>, 맞나요?` +
+      `<div class="modal-compare">` +
+      `지난달 ${formatNumber(prev)}원 <span class="modal-compare-arrow">→</span> 이번 달 <b>${formatNumber(curr)}원</b>` +
+      `</div>`;
+    document.getElementById('modalOverlay').classList.add('active');
+  }
+
+  function confirmAnomaly() {
+    if (state.pendingAnomaly) {
+      const { key, curr } = state.pendingAnomaly;
+      state.anomalyAcknowledged[key + '_' + curr] = true;
+    }
+    hideAnomalyModal();
+    // 다른 필드에도 이상치가 있을 수 있으니 다시 체크
+    if (!checkAnomalyOnCurrent()) return;
+    advance();
+  }
+
+  function rejectAnomaly() {
+    hideAnomalyModal();
+    const input = document.querySelector('.screen.active .input-amount');
+    if (input) input.focus();
+  }
+
+  function hideAnomalyModal() {
+    state.pendingAnomaly = null;
+    document.getElementById('modalOverlay').classList.remove('active');
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 요약 화면 렌더링
+  // ═══════════════════════════════════════════════════════════
+  function renderSummary() {
+    document.getElementById('summaryStore').textContent = state.data.storeName || '-';
+    if (state.data.month) {
+      const [y, m] = state.data.month.split('-');
+      const modeLabel = state.data.operationMode ? ' · ' + MODE_LABELS[state.data.operationMode] : '';
+      document.getElementById('summaryMonth').textContent = `${y}년 ${parseInt(m, 10)}월${modeLabel}`;
+    }
+
+    const list = document.getElementById('summaryList');
+    list.innerHTML = '';
+    let total = 0;
+
+    // staggered 등장 타이밍 (화면 슬라이드 끝나갈 무렵부터 시작)
+    const STAGGER_START = 180;
+    const STAGGER_STEP = 38;
+
+    // 매장 카드는 가장 먼저
+    document.querySelector('.summary-store').style.animationDelay = '0ms';
+
+    FIELDS.forEach((f, idx) => {
+      const curr = state.data[f.key];
+      const prev = state.prev[f.key];
+      if (curr != null) total += curr;
+
+      let diffHtml = '';
+      if (prev != null && prev !== 0 && curr != null) {
+        const pct = ((curr - prev) / prev) * 100;
+        if (Math.abs(pct) >= 1) {
+          const cls = pct > 0 ? 'up' : 'down';
+          const sign = pct > 0 ? '+' : '';
+          diffHtml = `<span class="summary-item-diff ${cls}">${sign}${Math.round(pct)}%</span>`;
+        }
+      }
+
+      const item = document.createElement('div');
+      item.className = 'summary-item';
+      item.style.animationDelay = (STAGGER_START + idx * STAGGER_STEP) + 'ms';
+      item.innerHTML =
+        `<span class="summary-item-label">${f.label}</span>` +
+        `<span class="summary-item-main">` +
+        `  <span class="summary-item-value">${curr != null ? formatNumber(curr) + '원' : '-'}</span>` +
+        `  ${diffHtml}` +
+        `</span>` +
+        `<button class="summary-item-edit" data-screen="${f.screen}">수정</button>`;
+      list.appendChild(item);
+    });
+
+    // 합계 카드는 가장 마지막
+    document.querySelector('.summary-total').style.animationDelay =
+      (STAGGER_START + FIELDS.length * STAGGER_STEP + 40) + 'ms';
+
+    // 수정 버튼 이벤트 위임
+    list.querySelectorAll('.summary-item-edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        jumpToScreen(parseInt(btn.dataset.screen, 10));
+      });
+    });
+
+    document.getElementById('summaryTotal').textContent = formatNumber(total) + '원';
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 제출 (Apps Script Web App으로 POST)
+  // ═══════════════════════════════════════════════════════════
+  async function submitForm() {
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn ? submitBtn.textContent : '제출하기';
+
+    const payload = {
+      storeId: state.data.storeId,
+      storeName: state.data.storeName,
+      month: state.data.month,
+      operationMode: state.data.operationMode,
+      submittedAt: new Date().toISOString(),
+    };
+    FIELDS.forEach(f => { payload[f.key] = state.data[f.key] ?? null; });
+
+    // 버튼 로딩 상태
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '제출 중...';
+    }
+
+    try {
+      // Content-Type: text/plain → CORS preflight 회피 (Apps Script Web App 패턴)
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'cors',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('서버 응답 오류 (' + response.status + ')');
+      }
+
+      const data = await response.json();
+      if (!data || data.success !== true) {
+        throw new Error((data && data.error) || '제출 처리 중 오류가 발생했습니다.');
+      }
+
+      // 성공 → 저장 데이터 삭제 + 완료 화면
+      clearStored();
+      state.history.push(COMPLETE_SCREEN);
+      showScreen(COMPLETE_SCREEN);
+
+    } catch (err) {
+      console.error('제출 오류:', err);
+      showToast('제출 실패: ' + (err.message || '네트워크 오류'));
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '다시 시도';
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 초기화
+  // ═══════════════════════════════════════════════════════════
+  function init() {
+    parseUrlParams();
+    populateMonths();
+    applyPrefill();
+
+    // 세그먼트(운영 방식) 이벤트 등록
+    document.querySelectorAll('.segment-group .segment').forEach(seg => {
+      seg.addEventListener('click', () => selectMode(seg.dataset.value));
+    });
+
+    // URL로 받은 운영 방식 즉시 반영 (화면 2 진입 시 자동 활성화)
+    if (state.data.operationMode) {
+      selectMode(state.data.operationMode);
+    }
+
+    // URL에 매장 정보가 있으면 즉시 저장된 진행 상태 복원 시도
+    if (state.data.storeId || state.data.storeName) {
+      state.restoreAttempted = true;
+      if (loadStored()) {
+        setTimeout(() => showToast('이전 입력 내용을 불러왔어요'), 400);
+      }
+    }
+
+    // 텍스트 입력
+    document.getElementById('storeNameInput').addEventListener('input', recheckCurrentScreen);
+
+    // 모든 금액 입력에 포맷터 부착
+    FIELDS.forEach(f => {
+      attachAmountFormatter(f.key + 'Input', recheckCurrentScreen);
+    });
+
+    // 엔터 = 다음 (이상치 모달은 "맞아요"로 처리, 매장명 모달은 명시적 선택 필요)
+    document.addEventListener('keydown', e => {
+      const storeModal = document.getElementById('storeConfirmOverlay');
+      const modal = document.getElementById('modalOverlay');
+
+      if (e.key === 'Enter') {
+        if (storeModal.classList.contains('active')) {
+          // 매장명 모달은 사용자가 직접 선택해야 함
+          return;
+        }
+        if (modal.classList.contains('active')) {
+          e.preventDefault();
+          confirmAnomaly();
+          return;
+        }
+        const activeBtn = document.querySelector('.screen.active .footer .btn:not(:disabled)');
+        if (activeBtn) {
+          e.preventDefault();
+          activeBtn.click();
+        }
+      }
+      if (e.key === 'Escape') {
+        if (storeModal.classList.contains('active')) {
+          resolveStoreConfirm(null);
+          return;
+        }
+        if (modal.classList.contains('active')) rejectAnomaly();
+      }
+    });
+
+    // 모달 배경 클릭 = 취소
+    document.getElementById('modalOverlay').addEventListener('click', e => {
+      if (e.target.id === 'modalOverlay') rejectAnomaly();
+    });
+
+    // 매장명 확인 모달 이벤트
+    document.getElementById('storeConfirmKeep').addEventListener('click', () => {
+      resolveStoreConfirm(null); // 원본 그대로
+    });
+    document.getElementById('storeConfirmOverlay').addEventListener('click', e => {
+      if (e.target.id === 'storeConfirmOverlay') resolveStoreConfirm(null);
+    });
+
+    // 매장 마스터는 init 시 백그라운드 prefetch (모달 뜰 때 지연 감소)
+    fetchStoreMaster();
+
+    showScreen(0);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
