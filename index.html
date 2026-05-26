@@ -1199,14 +1199,14 @@
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 입력월 드롭다운 (지난달 ~ 6개월 전)
+  // 입력월 드롭다운 (이번 달 ~ 2개월 전, 총 3개월)
   // ═══════════════════════════════════════════════════════════
   function populateMonths() {
     const select = document.getElementById('monthSelect');
     const now = new Date();
     const options = [];
-    // 이번 달부터 5개월 전까지 (총 6개). 기본 선택은 지난달(i=1).
-    for (let i = 0; i <= 5; i++) {
+    // 이번 달부터 2개월 전까지 (총 3개). 기본 선택은 이번 달(i=0).
+    for (let i = 0; i <= 2; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -1216,7 +1216,7 @@
       });
     }
     select.innerHTML = options
-      .map((o, i) => `<option value="${o.value}" ${i === 1 ? 'selected' : ''}>${o.label}</option>`)
+      .map((o, i) => `<option value="${o.value}" ${i === 0 ? 'selected' : ''}>${o.label}</option>`)
       .join('');
 
     if (state.data.month) {
