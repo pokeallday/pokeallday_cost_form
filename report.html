@@ -508,14 +508,18 @@ function getParams() {
   return {
     store: p.get('store') || p.get('storeId') || '',
     month: p.get('month') || '',
+    token: p.get('token') || '',
   };
 }
 
 // ═══════════════════════════════════════════════════════════════════
 // 데이터 fetch
 // ═══════════════════════════════════════════════════════════════════
-async function fetchReport(store, month) {
-  const url = `${APPS_SCRIPT_URL}?action=report&store=${encodeURIComponent(store)}&month=${encodeURIComponent(month)}`;
+async function fetchReport(store, month, token) {
+  const url = `${APPS_SCRIPT_URL}?action=report`
+    + `&store=${encodeURIComponent(store)}`
+    + `&month=${encodeURIComponent(month)}`
+    + `&token=${encodeURIComponent(token)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('네트워크 오류 (' + res.status + ')');
   const json = await res.json();
@@ -881,16 +885,27 @@ function showError(title, message) {
 // 메인
 // ═══════════════════════════════════════════════════════════════════
 (async function main() {
-  const { store, month } = getParams();
-  if (!store || !month) {
-    showError('잘못된 접근이에요', 'URL에 매장명(store)과 월(month) 정보가 필요합니다.');
+  const { store, month, token } = getParams();
+  if (!store || !month || !token) {
+    showError(
+      '접근 권한이 없어요',
+      '본사로부터 받으신 리포트 링크를 다시 확인해 주세요.'
+    );
     return;
   }
   try {
-    const data = await fetchReport(store, month);
+    const data = await fetchReport(store, month, token);
     render(data);
   } catch (err) {
-    showError('리포트를 불러올 수 없어요', err.message || '잠시 후 다시 시도해 주세요.');
+    const msg = String(err.message || '');
+    if (msg.indexOf('토큰') >= 0 || msg.indexOf('권한') >= 0) {
+      showError(
+        '접근 권한이 없어요',
+        '리포트 링크가 만료되었거나 잘못된 링크일 수 있어요. 본사에 문의해 주세요.'
+      );
+    } else {
+      showError('리포트를 불러올 수 없어요', msg || '잠시 후 다시 시도해 주세요.');
+    }
   }
 })();
 </script>
