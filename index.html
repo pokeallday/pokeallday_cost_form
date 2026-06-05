@@ -1176,7 +1176,7 @@
   const state = {
     current: 0,
     history: [0],
-    data: { storeId: '', storeName: '', month: '', operationMode: '' },
+    data: { storeId: '', storeName: '', month: '', operationMode: '', token: '' },
     prev: {},
     editReturnTo: null,        // [수정] 후 돌아갈 화면 (요약 화면 번호)
     anomalyAcknowledged: {},   // 키별로 사용자가 "맞아요" 확인한 화면 → 재진입 방지
@@ -1194,6 +1194,7 @@
     state.data.storeId = p.get('storeId') || '';
     state.data.storeName = p.get('store') || '';
     state.data.month = p.get('month') || '';
+    state.data.token = p.get('token') || '';  // 시크릿 토큰 (전월 조회/제출에 필요)
 
     const mode = p.get('mode');
     if (mode && MODE_LABELS[mode]) {
@@ -1583,11 +1584,15 @@
     // URL prefill로 이미 prev 값이 들어와 있으면 스킵 (본사가 의도적으로 보낸 케이스 우선)
     if (Object.keys(state.prev).length > 0) return;
 
+    // 토큰 없으면 전월 데이터 조회 스킵 (보안)
+    if (!state.data.token) return;
+
     try {
       const url = APPS_SCRIPT_URL +
         '?action=previous' +
         '&store=' + encodeURIComponent(state.data.storeId || state.data.storeName) +
-        '&month=' + encodeURIComponent(state.data.month);
+        '&month=' + encodeURIComponent(state.data.month) +
+        '&token=' + encodeURIComponent(state.data.token);
 
       const response = await fetch(url, { method: 'GET', redirect: 'follow' });
       if (!response.ok) return;
@@ -1948,6 +1953,7 @@
       storeName: state.data.storeName,
       month: state.data.month,
       operationMode: state.data.operationMode,
+      token: state.data.token,            // 토큰 포함 (서버에서 검증)
       submittedAt: new Date().toISOString(),
     };
     FIELDS.forEach(f => { payload[f.key] = state.data[f.key] ?? null; });
