@@ -469,12 +469,14 @@
   <!-- 푸터 -->
   <div class="footer">
     <div class="footer-note">
-      <strong>📋 리포트 안내</strong><br><br>
-      · 비교 기준은 <strong id="benchmarkCount">N개</strong> 매장-월 데이터 기반이에요<br><br>
+      <strong>📊 분석 데이터</strong><br><br>
+      <span id="dataInfoText">분석 데이터 정보를 불러오는 중...</span><br>
+      · 한 매장의 여러 월 데이터를 누적해 평균을 계산하므로, 매장 수보다 데이터 건수가 많아요<br><br>
+      <strong>📋 리포트 보는 법</strong><br><br>
       · 각 카드에 <strong>두 가지 비교</strong>를 표시했어요<br>
-      &nbsp;&nbsp;&nbsp;- 동종 매장 평균 vs 우리 매장<br>
-      &nbsp;&nbsp;&nbsp;- 지난달 vs 이번달<br><br>
-      · 분포 그래프의 <span style="color:#9CA3AF">●</span> 작은 회색 점은 <strong>지난달 위치</strong>예요<br><br>
+      &nbsp;&nbsp;&nbsp;- 동종 매장 평균 vs 우리 매장 (외부 비교)<br>
+      &nbsp;&nbsp;&nbsp;- 지난달 vs 이번달 (내부 비교)<br>
+      · 분포 그래프의 <span style="color:#9CA3AF">●</span> 작은 회색 점은 <strong>지난달 위치</strong>예요<br>
       · <strong>매출원가율이 통상 범위를 크게 벗어난 경우</strong> 데이터 확인 알람으로 표시합니다<br><br>
       · 본 리포트는 운영 결정의 참고 자료입니다
     </div>
@@ -622,9 +624,28 @@ function render(data) {
   // 상세 카드
   renderDetailCards(c, p, b, a);
 
-  // 푸터 표본 수
-  const total = (b.foodCostRatio && b.foodCostRatio.n) || 0;
-  $('benchmarkCount').textContent = total + '개';
+  // 푸터 분석 데이터 정보
+  const di = (data.metadata && data.metadata.dataInfo) || {};
+  const totalStores = di.totalStores || '';
+  const periodLabel = (di.monthFromLabel && di.monthToLabel)
+    ? `${di.monthFromLabel} ~ ${di.monthToLabel}`
+    : '';
+  const totalCount = (b.foodCostRatio && b.foodCostRatio.n) || 0;
+
+  const dataInfoEl = $('dataInfoText');
+  if (dataInfoEl) {
+    let html = '';
+    if (totalStores && periodLabel) {
+      html += `· 전체 <strong>${totalStores}개 매장</strong>의 <strong>${periodLabel}</strong> 운영 데이터를 활용했어요<br>`;
+    } else if (totalCount) {
+      html += `· 총 <strong>${totalCount.toLocaleString('ko-KR')}건</strong>의 동종 매장 데이터를 활용했어요<br>`;
+    }
+    if (totalCount && totalStores) {
+      const avg = Math.round(totalCount / totalStores);
+      html += `· 예) 매출원가율 ${totalCount.toLocaleString('ko-KR')}건 ≈ ${totalStores}개 매장 × 평균 ${avg}개월 데이터<br>`;
+    }
+    dataInfoEl.innerHTML = html || '· 통계 데이터 정보 없음';
+  }
 
   // 화면 전환
   $('loaderScreen').classList.add('hidden');
@@ -766,12 +787,29 @@ function renderDetailCards(c, p, b, a) {
       `;
     }
 
-    // 동종 매장 컨텍스트
+    // 동종 매장 컨텍스트 (매장 수 + 기간 + 데이터 건수)
+    const di = (data.metadata && data.metadata.dataInfo) || {};
+    const monthCount = di.monthCount || '';
+    const periodLabel = monthCount ? `최근 ${monthCount}개월 데이터` : '';
+    const totalStores = di.totalStores || '';
+
     let context = '';
     if (card.key === 'foodCostRatio') {
-      context = `전체 ${bench.n || 0}개 매장 기준 · 통상 운영 범위 30~45%`;
+      // "144개 매장 · 최근 26개월 데이터 (1,017건) · 본사 권장 35~40%"
+      const parts = [];
+      if (totalStores) parts.push(`${totalStores}개 매장`);
+      if (periodLabel) parts.push(`${periodLabel} (${(bench.n || 0).toLocaleString('ko-KR')}건)`);
+      parts.push('본사 권장 35~40%');
+      context = parts.join(' · ');
     } else {
-      context = `${bench.groupLabel} ${bench.n || 0}개 기준`;
+      // "같은 대학 상권 매장 · 최근 26개월 데이터 (174건)"
+      const parts = [bench.groupLabel];
+      if (periodLabel) parts.push(`${periodLabel} (${(bench.n || 0).toLocaleString('ko-KR')}건)`);
+      // 수수료율 카드는 매출 비중 정보도 표시
+      if (card.key === 'deliveryFeeRatio' && c.deliveryRatio != null) {
+        parts.push(`배달 비중 ${c.deliveryRatio}%`);
+      }
+      context = parts.join(' · ');
     }
 
     // 큰 수치 영역
