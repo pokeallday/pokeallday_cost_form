@@ -622,7 +622,7 @@ function render(data) {
   $('deliveryRevenue').textContent = fmt(c.deliveryRevenue);
 
   // 상세 카드
-  renderDetailCards(c, p, b, a);
+  renderDetailCards(c, p, b, a, data);
 
   // 푸터 분석 데이터 정보
   const di = (data.metadata && data.metadata.dataInfo) || {};
@@ -725,7 +725,7 @@ function renderMiniCards(c, b, a) {
 }
 
 // ─── 상세 카드 4개 동적 생성 ─────────────────────────────────────
-function renderDetailCards(c, p, b, a) {
+function renderDetailCards(c, p, b, a, data) {
   const container = $('detailCards');
   container.innerHTML = '';
 
