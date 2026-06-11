@@ -90,7 +90,7 @@
   /* ─── 요약 + KPI 한 줄 ─── */
   .summary-bar {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(9, 1fr);
     gap: 1px;
     background: var(--border-light);
   }
@@ -746,6 +746,8 @@ function renderBulkBtn(data) {
 
 function renderSummaryBar(data) {
   const s = data.summary;
+  const submitRate = s.totalStores > 0 ? (s.submittedCount / s.totalStores * 100) : 0;
+  const rateCls = submitRate >= 80 ? 'good' : (submitRate >= 50 ? 'warn' : 'bad');
   const tabs = [
     { key: 'all',     label: '전체',     val: s.totalStores + '개',          cls: 'sv',   click: true },
     { key: 'good',    label: '우수',     val: s.goodCount + '개',            cls: 'good', click: true },
@@ -753,6 +755,7 @@ function renderSummaryBar(data) {
     { key: 'missing', label: '미입력',   val: s.missingCount + '개',          cls: 'bad',  click: true },
   ];
   const stats = [
+    { label: '수취율',           val: pct(submitRate), sub: `${s.submittedCount} / ${s.totalStores} 매장`, cls: rateCls },
     { label: '총 매출',          val: wonM(s.totalRevenue) + '원' },
     { label: '총 영업이익',      val: wonM(s.totalOperatingProfit) + '원' },
     { label: '평균 영업이익률',  val: pct(s.avgOperatingRatio), sub: `동종 ${pct(data.benchmark.operatingRatio)}` },
@@ -773,7 +776,7 @@ function renderSummaryBar(data) {
     html += `
       <div class="summary-cell">
         <div class="summary-label">${t.label}</div>
-        <div class="summary-value">${t.val}</div>
+        <div class="summary-value ${t.cls || ''}">${t.val}</div>
         ${t.sub ? `<div class="summary-sub">${t.sub}</div>` : ''}
       </div>
     `;
