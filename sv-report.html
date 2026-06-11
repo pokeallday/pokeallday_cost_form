@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#5B21B6">
+<title>SV 리포트 — 포케올데이</title>
+
+<meta property="og:title" content="SV 리포트 — 매장 운영 분석">
+<meta property="og:type" content="website">
+
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --sv: #5B21B6;
+    --sv-dark: #4C1D95;
+    --sv-light: #EDE9FE;
+    --brand: #00A472;
+    --text: #111827;
+    --text-sub: #6B7280;
+    --text-light: #9CA3AF;
+    --bg: #FFFFFF;
+    --bg-soft: #F9FAFB;
+    --bg-section: #F3F4F6;
+    --border: #E5E7EB;
+    --border-light: #F3F4F6;
+    --good: #10B981;
+    --good-bg: #ECFDF5;
+    --warn: #F59E0B;
+    --warn-bg: #FFFBEB;
+    --bad: #EF4444;
+    --bad-bg: #FEF2F2;
+    --alert: #DC2626;
+    --alert-bg: #FEF2F2;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: var(--text); background: var(--bg-section);
+    -webkit-font-smoothing: antialiased;
+  }
+  body { min-height: 100vh; }
+  .app { max-width: 480px; margin: 0 auto; background: var(--bg); min-height: 100vh; }
+
+  /* 로딩/에러 */
+  .loader-screen, .error-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; padding: 20px;
+  }
+  .loader-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--sv);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 18px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: 14px; color: var(--text-sub); }
+  .error-icon { font-size: 48px; margin-bottom: 16px; }
+  .error-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .error-message { font-size: 14px; color: var(--text-sub); line-height: 1.6; text-align: center; }
+
+  /* 헤더 */
+  .hero {
+    background: linear-gradient(135deg, var(--sv) 0%, var(--sv-dark) 100%);
+    color: white; padding: 24px 24px 32px;
+    position: relative; overflow: hidden;
+  }
+  .hero-tag {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
+    padding: 4px 10px; border-radius: 10px;
+    background: rgba(255,255,255,0.2); margin-bottom: 12px;
+  }
+  .hero-meta { font-size: 12px; opacity: 0.85; margin-bottom: 4px; }
+  .hero-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.02em; }
+  .hero-sub { font-size: 13px; opacity: 0.9; }
+
+  /* KPI 4분할 */
+  .kpi-grid {
+    margin: -16px 16px 0;
+    background: white; border-radius: 14px; border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+    display: grid; grid-template-columns: 1fr 1fr;
+    position: relative; z-index: 2;
+  }
+  .kpi-item {
+    padding: 14px 16px;
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+  }
+  .kpi-item:nth-child(2n) { border-right: none; }
+  .kpi-item:nth-child(n+3) { border-bottom: none; }
+  .kpi-label { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; font-weight: 600; }
+  .kpi-value { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+  .kpi-pct { font-size: 12px; color: var(--text-sub); margin-top: 4px; font-weight: 600; }
+  .kpi-pct.good { color: var(--good); }
+  .kpi-pct.bad { color: var(--bad); }
+  .kpi-pct.warn { color: var(--warn); }
+  .kpi-pct.muted { color: var(--text-light); font-weight: 500; }
+
+  /* 매출 구성 */
+  .revenue-chart {
+    margin: 16px; background: white;
+    border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+  }
+  .rc-title {
+    font-size: 15px; font-weight: 700; margin-bottom: 14px;
+    display: flex; justify-content: space-between;
+  }
+  .rc-title-sub { font-size: 11px; color: var(--text-sub); font-weight: 500; }
+  .rc-group { margin-bottom: 14px; }
+  .rc-group:last-child { margin-bottom: 0; }
+  .rc-group-head {
+    display: flex; justify-content: space-between;
+    font-size: 12px; font-weight: 600; margin-bottom: 6px;
+  }
+  .rc-group-head .lbl { color: var(--text); }
+  .rc-group-head .val { color: var(--text-sub); }
+  .rc-bar-stack {
+    display: flex; height: 22px; border-radius: 5px;
+    overflow: hidden; margin-bottom: 6px; background: var(--bg-soft);
+  }
+  .rc-bar-seg {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: white; font-weight: 700; overflow: hidden;
+    min-width: 0;
+  }
+  .rc-list {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px 12px; font-size: 11px;
+  }
+  .rc-list-item {
+    display: flex; align-items: center; gap: 6px; color: var(--text-sub);
+  }
+  .rc-dot {
+    width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0;
+  }
+  .rc-list-item .name { flex: 1; }
+  .rc-list-item .amount { font-weight: 600; color: var(--text); }
+
+  .c-hall1 { background: #047857; }
+  .c-hall2 { background: #10B981; }
+  .c-hall3 { background: #34D399; }
+  .c-hall4 { background: #6EE7B7; }
+  .c-del1 { background: #4338CA; }
+  .c-del2 { background: #6366F1; }
+  .c-del3 { background: #818CF8; }
+  .c-del4 { background: #A5B4FC; }
+  .c-del5 { background: #C7D2FE; color: #4338CA !important; }
+
+  /* 수익 구조 워터폴 */
+  .waterfall {
+    margin: 16px; background: white;
+    border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+  }
+  .waterfall-title {
+    font-size: 15px; font-weight: 700; margin-bottom: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .waterfall-title-sub { font-size: 11px; color: var(--text-sub); font-weight: 500; }
+  .wf-section {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: var(--bg-soft);
+    border-radius: 8px;
+  }
+  .wf-section.revenue { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+  .wf-section.operating { background: linear-gradient(135deg, #ECFDF5, #D1FAE5); }
+  .wf-section.net {
+    background: linear-gradient(135deg, var(--sv), var(--sv-dark));
+    color: white;
+  }
+  .wf-section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px;
+  }
+  .wf-section-name { font-size: 13px; font-weight: 700; }
+  .wf-section-pct { font-size: 11px; font-weight: 600; opacity: 0.7; }
+  .wf-section-amount { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+  .wf-detail-row {
+    display: flex; align-items: center;
+    padding: 6px 0;
+    font-size: 12px;
+    border-bottom: 1px dashed var(--border-light);
+  }
+  .wf-detail-row:last-child { border-bottom: none; }
+  .wf-detail-label {
+    flex: 0 0 110px; color: var(--text-sub);
+  }
+  .wf-detail-label.minus { color: var(--bad); }
+  .wf-detail-bar-wrap {
+    flex: 1; height: 10px; background: white;
+    border-radius: 3px; position: relative; margin: 0 10px; overflow: hidden;
+  }
+  .wf-detail-bar {
+    height: 100%; border-radius: 3px;
+    background: var(--bad); opacity: 0.6;
+  }
+  .wf-detail-pct {
+    flex: 0 0 36px; text-align: right;
+    font-size: 11px; font-weight: 600; color: var(--text-sub);
+  }
+  .wf-detail-amount {
+    flex: 0 0 100px; text-align: right;
+    font-size: 11px; color: var(--bad); font-weight: 600;
+  }
+  .wf-subtotal {
+    display: flex; justify-content: space-between;
+    padding: 8px 0 0; margin-top: 4px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; font-weight: 700;
+  }
+  .wf-subtotal-label { color: var(--text); }
+  .wf-subtotal-amount { color: var(--bad); }
+
+  /* 수익성 비교 */
+  .compare-card {
+    margin: 16px; background: white;
+    border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+  }
+  .compare-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .compare-row { padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-head { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .compare-head-label { font-size: 13px; font-weight: 600; }
+  .compare-head-value { font-size: 16px; font-weight: 800; }
+  .compare-bar-wrap {
+    height: 10px; background: var(--bg-soft); border-radius: 5px;
+    position: relative; margin-top: 6px;
+  }
+  .compare-bar-mean { position: absolute; top: -2px; width: 2px; height: 14px; background: var(--text-sub); }
+  .compare-bar-marker {
+    position: absolute; top: -5px;
+    width: 20px; height: 20px;
+    border-radius: 50%; background: white;
+    border: 3px solid var(--sv);
+    transform: translateX(-50%);
+  }
+  .compare-bar-marker.good { border-color: var(--good); }
+  .compare-bar-marker.bad { border-color: var(--bad); }
+  .compare-bar-marker.warn { border-color: var(--warn); }
+  .compare-meta {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text-sub); margin-top: 6px;
+  }
+  .compare-vs { text-align: right; }
+  .compare-vs-pct {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+    margin-top: 4px; display: inline-block;
+  }
+  .compare-vs-pct.up { background: var(--good-bg); color: var(--good); }
+  .compare-vs-pct.down { background: var(--bad-bg); color: var(--bad); }
+
+  /* 위험 신호 */
+  .signals {
+    margin: 16px; background: white;
+    border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+  }
+  .signals-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .signal-item {
+    padding: 10px 12px; border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 13px; line-height: 1.5;
+  }
+  .signal-item:last-child { margin-bottom: 0; }
+  .signal-item.alert { background: var(--alert-bg); border-left: 3px solid var(--alert); }
+  .signal-item.warn { background: var(--warn-bg); border-left: 3px solid var(--warn); }
+  .signal-item.info { background: #EFF6FF; border-left: 3px solid #3B82F6; }
+  .signal-item.good { background: var(--good-bg); border-left: 3px solid var(--good); }
+  .signal-icon { flex-shrink: 0; font-size: 18px; line-height: 1.3; }
+  .signal-text strong { font-weight: 700; }
+
+  /* 매장 메타 */
+  .info-table {
+    margin: 16px; background: white;
+    border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+  }
+  .info-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .info-cell { border-left: 3px solid var(--sv-light); padding-left: 10px; }
+  .info-cell-label { font-size: 11px; color: var(--text-sub); }
+  .info-cell-value { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 2px; }
+
+  /* 비용 카드 */
+  .section { padding: 18px 24px 4px; }
+  .section-title { font-size: 16px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .section-sub { font-size: 12px; color: var(--text-sub); }
+
+  .cost-card {
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin: 10px 16px;
+  }
+  .cost-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .cost-name { font-size: 14px; font-weight: 700; }
+  .cost-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+  .cost-badge.good { background: var(--good-bg); color: var(--good); }
+  .cost-badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .cost-badge.bad { background: var(--bad-bg); color: var(--bad); }
+  .cost-numbers { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .cost-mine { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .cost-mine.bad { color: var(--bad); }
+  .cost-mine.warn { color: var(--warn); }
+  .cost-vs { font-size: 11px; color: var(--text-sub); }
+  .cost-vs-val { font-size: 12px; font-weight: 600; color: var(--text); }
+  .cost-diff { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  .cost-diff.up { background: var(--bad-bg); color: var(--bad); }
+  .cost-diff.down { background: var(--good-bg); color: var(--good); }
+  .cost-context { font-size: 11px; color: var(--text-sub); margin-bottom: 8px; }
+  .cost-bar-wrap { height: 6px; background: var(--bg-soft); border-radius: 3px; position: relative; }
+  .cost-bar-iqr { position: absolute; height: 100%; background: var(--sv-light); border-radius: 3px; }
+  .cost-bar-mean { position: absolute; top: -2px; width: 2px; height: 10px; background: var(--sv); }
+  .cost-bar-marker {
+    position: absolute; top: -3px;
+    width: 12px; height: 12px;
+    border-radius: 50%; background: white;
+    border: 3px solid var(--sv);
+    transform: translateX(-50%);
+  }
+  .cost-bar-marker.bad { border-color: var(--bad); }
+  .cost-bar-marker.warn { border-color: var(--warn); }
+  .cost-bar-marker.good { border-color: var(--good); }
+  .cost-ranges { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-light); margin-top: 4px; }
+
+  /* 푸터 */
+  .footer { padding: 24px 24px 36px; text-align: center; font-size: 11px; color: var(--text-light); line-height: 1.6; }
+  .footer-note {
+    background: var(--bg-soft); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 14px;
+    text-align: left; font-size: 10px; line-height: 1.7; color: var(--text-sub);
+  }
+  .footer-note strong { color: var(--text); }
+  .footer-brand { font-weight: 700; color: var(--sv); margin-bottom: 2px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="loaderScreen" class="loader-screen">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">SV 리포트 불러오는 중…</div>
+</div>
+
+<div id="errorScreen" class="error-screen hidden">
+  <div class="error-icon">😔</div>
+  <div class="error-title" id="errorTitle">리포트를 불러올 수 없어요</div>
+  <div class="error-message" id="errorMessage">잠시 후 다시 시도해 주세요.</div>
+</div>
+
+<div class="app hidden" id="reportApp">
+  <!-- 헤더 -->
+  <div class="hero">
+    <div class="hero-tag">SV REPORT · INTERNAL</div>
+    <div class="hero-meta" id="reportMonth">매장 운영 분석</div>
+    <div class="hero-title" id="storeName">매장명</div>
+    <div class="hero-sub" id="storeMeta">담당 SV · 지역 / 상권 / 운영방식</div>
+  </div>
+
+  <!-- KPI 4분할 -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- 매출 구성 -->
+  <div class="revenue-chart" id="revenueChart"></div>
+
+  <!-- 수익 구조 -->
+  <div class="waterfall" id="waterfall"></div>
+
+  <!-- 수익성 비교 -->
+  <div class="compare-card" id="compareCard"></div>
+
+  <!-- SV 액션 -->
+  <div class="signals" id="signals"></div>
+
+  <!-- 매장 메타 -->
+  <div class="info-table" id="infoTable"></div>
+
+  <!-- 비용 항목 상세 -->
+  <div class="section">
+    <div class="section-title">비용 항목 상세</div>
+    <div class="section-sub" id="costSectionSub">동종 매장 비교</div>
+  </div>
+  <div id="costCards"></div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    <div class="footer-note">
+      <strong>📊 분석 데이터 & 정의</strong><br>
+      · 영업이익 = 매출 − 지출합계 (식자재 + 인건비 + 임대 + 배달용기 + 기타운영비 + 로열티)<br>
+      · 순이익 = 영업이익 − 배달플랫폼 수수료<br>
+      · <strong>인건비는 직원 인건비 + 4대보험만 포함 (점주 본인 인건비 제외)</strong><br>
+      <span id="footerDataInfo">· 분석 데이터 정보 불러오는 중…</span><br>
+      · 본 리포트는 SV 내부 운영 자료입니다. 점주에게 공유 시 주의.
+    </div>
+    <div class="footer-brand">POKE ALL DAY · SV INTERNAL</div>
+    <div>매월 발행 · 본사 운영지원팀</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// 설정
+// ═══════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwh4fpveSQRXqEmNPLiilBfMRJ0kSTggn_XocsptG4KgVQdIE-H47x5-5ShrdqJ6uJQ/exec';
+
+// ═══════════════════════════════════════════════════════════
+// 유틸
+// ═══════════════════════════════════════════════════════════
+const $ = (id) => document.getElementById(id);
+const won = (n) => Math.round(Number(n || 0)).toLocaleString('ko-KR') + '원';
+const pct = (n) => (n === null || n === undefined ? '-' : Math.round(n * 10) / 10 + '%');
+const norm = (v, min, max) => Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
+const escapeHtml = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// URL 파라미터 파싱 (SV 리포트는 본사 내부용 - 토큰 불필요)
+function getParams() {
+  const p = new URLSearchParams(location.search);
+  return {
+    store: p.get('store') || p.get('storeId') || '',
+    month: p.get('month') || '',
+  };
+}
+
+async function fetchReport(store, month) {
+  const url = `${APPS_SCRIPT_URL}?action=report&mode=sv`
+    + `&store=${encodeURIComponent(store)}`
+    + `&month=${encodeURIComponent(month)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('네트워크 오류 (' + res.status + ')');
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'SV 리포트를 만들 수 없어요');
+  return json.data;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 메인 렌더링
+// ═══════════════════════════════════════════════════════════
+function render(data) {
+  const c = data.current;
+  const sv = data.svDetails;
+  const b = data.benchmarks;
+  const a = data.alerts || {};
+
+  // 헤더
+  const [y, m] = data.month.split('-');
+  $('reportMonth').textContent = `${y}년 ${parseInt(m, 10)}월 매장 운영 분석`;
+  $('storeName').textContent = `${data.store.name} (#${data.store.id})`;
+  $('storeMeta').textContent = `담당 SV ${data.store.sv || '-'} · ${data.store.region || '-'} / ${data.store.zone || '-'} / ${data.store.operation || '-'}`;
+
+  renderKPI(data, sv);
+  renderRevenueChart(sv);
+  renderWaterfall(sv, c.revenue);
+  renderProfitCompare(sv);
+  renderSignals(data, sv);
+  renderInfoTable(data, c);
+  renderCostCards(c, b, a, data);
+  renderFooter(data);
+
+  $('loaderScreen').classList.add('hidden');
+  $('reportApp').classList.remove('hidden');
+}
+
+// ─── KPI 4분할 ─────────────────────────────────────────────
+function renderKPI(data, sv) {
+  const revenue = data.current.revenue;
+  const op = sv.profit.operating;
+  const net = sv.profit.net;
+  const pb = sv.profitBenchmarks;
+
+  // 종합 진단 자동 산출
+  let diag = { label: '⚙️ 안정적 운영', detail: '주요 지표 정상 범위', color: 'good' };
+  if (data.alerts && data.alerts.foodCostRatio) {
+    diag = { label: '🚨 데이터 확인', detail: '매출원가율 통상 범위 밖', color: 'bad' };
+  } else if (pb.netRatio.mean !== null && net.ratio < pb.netRatio.mean - 5) {
+    diag = { label: '⚠️ 수익성 점검', detail: '순이익률 평균 하회', color: 'warn' };
+  } else if (pb.revenue.mean && revenue < pb.revenue.mean * 0.7) {
+    diag = { label: '📉 매출 확대 필요', detail: '동종 매장 평균의 70% 이하', color: 'warn' };
+  } else if (pb.operatingRatio.mean !== null && op.ratio > pb.operatingRatio.mean + 10) {
+    diag = { label: '✓ 수익성 우수', detail: '영업이익률 평균 대비 우수', color: 'good' };
+  }
+
+  $('kpiGrid').innerHTML = `
+    <div class="kpi-item">
+      <div class="kpi-label">월 매출</div>
+      <div class="kpi-value">${won(revenue)}</div>
+      <div class="kpi-pct muted">${data.previous ? `전월 ${won(data.previous.revenue)}` : '전월 데이터 없음'}</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-label">영업이익</div>
+      <div class="kpi-value">${won(op.amount)}</div>
+      <div class="kpi-pct ${op.ratio >= (pb.operatingRatio.mean || 20) ? 'good' : 'warn'}">영업이익률 ${pct(op.ratio)}</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-label">순이익</div>
+      <div class="kpi-value">${won(net.amount)}</div>
+      <div class="kpi-pct ${net.ratio >= (pb.netRatio.mean || 10) ? 'good' : 'warn'}">순이익률 ${pct(net.ratio)}</div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-label">SV 종합 진단</div>
+      <div class="kpi-value" style="font-size:14px; color:var(--${diag.color === 'bad' ? 'bad' : diag.color === 'warn' ? 'warn' : 'good'});">${escapeHtml(diag.label)}</div>
+      <div class="kpi-pct">${escapeHtml(diag.detail)}</div>
+    </div>
+  `;
+}
+
+// ─── 매출 구성 ─────────────────────────────────────────────
+function renderRevenueChart(sv) {
+  const rb = sv.revenueBreakdown;
+  const hall = rb.hall;
+  const del = rb.delivery;
+  const totalRevenue = hall.total + del.total;
+
+  const segLabel = (pct) => pct >= 10 ? Math.round(pct) + '%' : '';
+
+  const hallSegPct = (val) => hall.total > 0 ? (val / hall.total) * 100 : 0;
+  const delSegPct = (val) => del.total > 0 ? (val / del.total) * 100 : 0;
+
+  $('revenueChart').innerHTML = `
+    <div class="rc-title">
+      <span>💵 매출 구성</span>
+      <span class="rc-title-sub">총 ${won(totalRevenue)}</span>
+    </div>
+    <div class="rc-group">
+      <div class="rc-group-head">
+        <span class="lbl">🏪 홀 매출 ${pct(hall.ratio)}</span>
+        <span class="val">${won(hall.total)}</span>
+      </div>
+      <div class="rc-bar-stack">
+        <div class="rc-bar-seg c-hall1" style="width: ${hallSegPct(hall.channels.direct)}%;">${segLabel(hallSegPct(hall.channels.direct))}</div>
+        <div class="rc-bar-seg c-hall2" style="width: ${hallSegPct(hall.channels.naver)}%;">${segLabel(hallSegPct(hall.channels.naver))}</div>
+        <div class="rc-bar-seg c-hall3" style="width: ${hallSegPct(hall.channels.pathOrder)}%;">${segLabel(hallSegPct(hall.channels.pathOrder))}</div>
+        <div class="rc-bar-seg c-hall4" style="width: ${hallSegPct(hall.channels.togiOrder)}%;">${segLabel(hallSegPct(hall.channels.togiOrder))}</div>
+      </div>
+      <div class="rc-list">
+        <div class="rc-list-item"><span class="rc-dot c-hall1"></span><span class="name">홀</span><span class="amount">${won(hall.channels.direct)}</span></div>
+        <div class="rc-list-item"><span class="rc-dot c-hall2"></span><span class="name">네이버</span><span class="amount">${won(hall.channels.naver)}</span></div>
+        <div class="rc-list-item"><span class="rc-dot c-hall3"></span><span class="name">패스오더</span><span class="amount">${won(hall.channels.pathOrder)}</span></div>
+        <div class="rc-list-item"><span class="rc-dot c-hall4"></span><span class="name">토기오더</span><span class="amount">${won(hall.channels.togiOrder)}</span></div>
+      </div>
+    </div>
+    <div class="rc-group">
+      <div class="rc-group-head">
+        <span class="lbl">🛵 배달 매출 ${pct(del.ratio)}</span>
+        <span class="val">${won(del.total)}</span>
+      </div>
+      <div class="rc-bar-stack">
+        <div class="rc-bar-seg c-del1" style="width: ${delSegPct(del.channels.baemin)}%;">${segLabel(delSegPct(del.channels.baemin))}</div>
+        <div class="rc-bar-seg c-del2" style="width: ${delSegPct(del.channels.coupangEats)}%;">${segLabel(delSegPct(del.channels.coupangEats))}</div>
+        <div class="rc-bar-seg c-del3" style="width: ${delSegPct(del.channels.yogiyo)}%;">${segLabel(delSegPct(del.channels.yogiyo))}</div>
+        <div class="rc-bar-seg c-del4" style="width: ${delSegPct(del.channels.ddanggyo)}%;">${segLabel(delSegPct(del.channels.ddanggyo))}</div>
+        <div class="rc-bar-seg c-del5" style="width: ${delSegPct(del.channels.etc)}%;">${segLabel(delSegPct(del.channels.etc))}</div>
+      </div>
+      <div class="rc-list">
+        <div class="rc-list-item"><span class="rc-dot c-del1"></span><span class="name">배달의민족</span><span class="amount">${won(del.channels.baemin)}</span></div>
+        <div class="rc-list-item"><span class="rc-dot c-del2"></span><span class="name">쿠팡이츠</span><span class="amount">${won(del.channels.coupangEats)}</span></div>
+        <div class="rc-list-item"><span class="rc-dot c-del3"></span><span class="name">요기요</span><span class="amount">${won(del.channels.yogiyo)}</span></div>
+        <div class="rc-list-item"><span class="rc-dot c-del4"></span><span class="name">땡겨요</span><span class="amount">${won(del.channels.ddanggyo)}</span></div>
+        <div class="rc-list-item"><span class="rc-dot c-del5"></span><span class="name">기타</span><span class="amount">${won(del.channels.etc)}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── 수익 구조 워터폴 ──────────────────────────────────────
+function renderWaterfall(sv, revenue) {
+  const cb = sv.costBreakdown;
+
+  // 부분 항목별 행 생성
+  const detailRow = (label, amount, sectionTotal) => {
+    if (amount <= 0) return '';  // 0이면 표시 안 함
+    const ratio = revenue > 0 ? (amount / revenue) * 100 : 0;
+    const widthPct = sectionTotal > 0 ? (amount / sectionTotal) * 100 : 0;
+    return `
+      <div class="wf-detail-row">
+        <div class="wf-detail-label minus">− ${escapeHtml(label)}</div>
+        <div class="wf-detail-bar-wrap"><div class="wf-detail-bar" style="width: ${widthPct}%"></div></div>
+        <div class="wf-detail-pct">${ratio.toFixed(1)}%</div>
+        <div class="wf-detail-amount">−${won(amount)}</div>
+      </div>
+    `;
+  };
+
+  const food = cb.food.items;
+  const labor = cb.labor.items;
+  const rent = cb.rent.items;
+  const etc = cb.etc.items;
+  const fee = cb.platformFee.items;
+
+  $('waterfall').innerHTML = `
+    <div class="waterfall-title">
+      <span>💰 수익 구조 (세부)</span>
+      <span class="waterfall-title-sub">SV 데이터 검토용</span>
+    </div>
+
+    <div class="wf-section revenue">
+      <div class="wf-section-head">
+        <span class="wf-section-name">📊 매출</span>
+        <span class="wf-section-pct">100%</span>
+      </div>
+      <div class="wf-section-amount">${won(revenue)}</div>
+    </div>
+
+    <div class="wf-section">
+      <div class="wf-section-head">
+        <span class="wf-section-name">🥘 식자재</span>
+        <span class="wf-section-pct">${cb.food.ratio.toFixed(1)}%</span>
+      </div>
+      ${detailRow('웰스토리', food.wellstory, cb.food.total)}
+      ${detailRow('발주고', food.balzugo, cb.food.total)}
+      ${detailRow('외부 식자재', food.external, cb.food.total)}
+      <div class="wf-subtotal"><span class="wf-subtotal-label">소계</span><span class="wf-subtotal-amount">−${won(cb.food.total)}</span></div>
+    </div>
+
+    <div class="wf-section">
+      <div class="wf-section-head">
+        <span class="wf-section-name">👥 인건비 (직원만)</span>
+        <span class="wf-section-pct">${cb.labor.ratio.toFixed(1)}%</span>
+      </div>
+      ${detailRow('인건비', labor.wage, cb.labor.total)}
+      ${detailRow('4대보험', labor.insurance4, cb.labor.total)}
+      <div class="wf-subtotal"><span class="wf-subtotal-label">소계 (점주 본인 인건비 제외)</span><span class="wf-subtotal-amount">−${won(cb.labor.total)}</span></div>
+    </div>
+
+    <div class="wf-section">
+      <div class="wf-section-head">
+        <span class="wf-section-name">🏢 임대 비용</span>
+        <span class="wf-section-pct">${cb.rent.ratio.toFixed(1)}%</span>
+      </div>
+      ${detailRow('임대료', rent.base, cb.rent.total)}
+      ${detailRow('건물관리비', rent.building, cb.rent.total)}
+      <div class="wf-subtotal"><span class="wf-subtotal-label">소계</span><span class="wf-subtotal-amount">−${won(cb.rent.total)}</span></div>
+    </div>
+
+    <div class="wf-section">
+      <div class="wf-section-head">
+        <span class="wf-section-name">🔧 기타 운영비</span>
+        <span class="wf-section-pct">${cb.etc.ratio.toFixed(1)}%</span>
+      </div>
+      ${detailRow('공과금', etc.utility, cb.etc.total)}
+      ${detailRow('보험/세무', etc.insuranceTax, cb.etc.total)}
+      ${detailRow('배달대행료', etc.deliveryFee, cb.etc.total)}
+      ${detailRow('렌탈료', etc.rental, cb.etc.total)}
+      ${detailRow('소모품비', etc.supplies, cb.etc.total)}
+      ${detailRow('기타비용', etc.others, cb.etc.total)}
+      ${detailRow('배달용기', etc.deliveryContainer, cb.etc.total)}
+      ${detailRow('로열티(전월)', etc.royalty, cb.etc.total)}
+      <div class="wf-subtotal"><span class="wf-subtotal-label">소계</span><span class="wf-subtotal-amount">−${won(cb.etc.total)}</span></div>
+    </div>
+
+    <div class="wf-section operating">
+      <div class="wf-section-head">
+        <span class="wf-section-name">💚 영업이익</span>
+        <span class="wf-section-pct">${pct(sv.profit.operating.ratio)}</span>
+      </div>
+      <div class="wf-section-amount">${won(sv.profit.operating.amount)}</div>
+    </div>
+
+    <div class="wf-section">
+      <div class="wf-section-head">
+        <span class="wf-section-name">📱 배달플랫폼 수수료</span>
+        <span class="wf-section-pct">${cb.platformFee.ratio.toFixed(1)}%</span>
+      </div>
+      ${detailRow('배민', fee.baemin, cb.platformFee.total)}
+      ${detailRow('쿠팡이츠', fee.coupang, cb.platformFee.total)}
+      ${detailRow('요기요', fee.yogiyo, cb.platformFee.total)}
+      <div class="wf-subtotal"><span class="wf-subtotal-label">소계</span><span class="wf-subtotal-amount">−${won(cb.platformFee.total)}</span></div>
+    </div>
+
+    <div class="wf-section net">
+      <div class="wf-section-head">
+        <span class="wf-section-name">💎 순이익</span>
+        <span class="wf-section-pct">${pct(sv.profit.net.ratio)}</span>
+      </div>
+      <div class="wf-section-amount">${won(sv.profit.net.amount)}</div>
+    </div>
+  `;
+}
+
+// ─── 수익성 비교 ───────────────────────────────────────────
+function renderProfitCompare(sv) {
+  const op = sv.profit.operating;
+  const net = sv.profit.net;
+  const pb = sv.profitBenchmarks;
+
+  // 분포 비교: 평균 위치 + 매장 위치
+  // 영업이익률: -20% ~ 50% 범위 가정
+  const opMin = -20, opMax = 50;
+  const netMin = -30, netMax = 40;
+  const revMin = 5000000, revMax = 80000000;
+
+  const opMeanPos = pb.operatingRatio.mean !== null ? norm(pb.operatingRatio.mean, opMin, opMax) : 50;
+  const opMyPos = norm(op.ratio, opMin, opMax);
+  const opDiff = pb.operatingRatio.mean !== null ? op.ratio - pb.operatingRatio.mean : 0;
+  const opCls = opDiff >= 0 ? 'good' : 'bad';
+
+  const netMeanPos = pb.netRatio.mean !== null ? norm(pb.netRatio.mean, netMin, netMax) : 50;
+  const netMyPos = norm(net.ratio, netMin, netMax);
+  const netDiff = pb.netRatio.mean !== null ? net.ratio - pb.netRatio.mean : 0;
+  const netCls = netDiff >= 0 ? 'good' : 'bad';
+
+  const revMeanPos = pb.revenue.mean ? norm(pb.revenue.mean, revMin, revMax) : 50;
+  const revMyPos = norm(sv.revenueBreakdown.hall.total + sv.revenueBreakdown.delivery.total, revMin, revMax);
+  const revDiff = pb.revenue.mean ? Math.round(((sv.revenueBreakdown.hall.total + sv.revenueBreakdown.delivery.total) / pb.revenue.mean - 1) * 100) : 0;
+  const revCls = revDiff >= 0 ? 'good' : 'bad';
+
+  $('compareCard').innerHTML = `
+    <div class="compare-title">📊 수익성 동종 매장 비교</div>
+
+    <div class="compare-row">
+      <div class="compare-head">
+        <span class="compare-head-label">영업이익률</span>
+        <span class="compare-head-value">${pct(op.ratio)}</span>
+      </div>
+      <div class="compare-bar-wrap">
+        <div class="compare-bar-mean" style="left: ${opMeanPos}%"></div>
+        <div class="compare-bar-marker ${opCls}" style="left: ${opMyPos}%"></div>
+      </div>
+      <div class="compare-meta">
+        <span>동종 운영방식 평균 ${pb.operatingRatio.mean !== null ? pct(pb.operatingRatio.mean) : '-'} (${pb.operatingRatio.n}건)</span>
+        <span class="compare-vs"><span class="compare-vs-pct ${opCls === 'good' ? 'up' : 'down'}">${opDiff >= 0 ? '+' : ''}${opDiff.toFixed(1)}%p</span></span>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-head">
+        <span class="compare-head-label">순이익률</span>
+        <span class="compare-head-value">${pct(net.ratio)}</span>
+      </div>
+      <div class="compare-bar-wrap">
+        <div class="compare-bar-mean" style="left: ${netMeanPos}%"></div>
+        <div class="compare-bar-marker ${netCls}" style="left: ${netMyPos}%"></div>
+      </div>
+      <div class="compare-meta">
+        <span>동종 운영방식 평균 ${pb.netRatio.mean !== null ? pct(pb.netRatio.mean) : '-'} (${pb.netRatio.n}건)</span>
+        <span class="compare-vs"><span class="compare-vs-pct ${netCls === 'good' ? 'up' : 'down'}">${netDiff >= 0 ? '+' : ''}${netDiff.toFixed(1)}%p</span></span>
+      </div>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-head">
+        <span class="compare-head-label">월 매출</span>
+        <span class="compare-head-value">${won(sv.revenueBreakdown.hall.total + sv.revenueBreakdown.delivery.total)}</span>
+      </div>
+      <div class="compare-bar-wrap">
+        <div class="compare-bar-mean" style="left: ${revMeanPos}%"></div>
+        <div class="compare-bar-marker ${revCls}" style="left: ${revMyPos}%"></div>
+      </div>
+      <div class="compare-meta">
+        <span>동종 운영방식 평균 ${pb.revenue.mean ? won(pb.revenue.mean) : '-'} (${pb.revenue.n}건)</span>
+        <span class="compare-vs"><span class="compare-vs-pct ${revCls === 'good' ? 'up' : 'down'}">${revDiff >= 0 ? '+' : ''}${revDiff}%</span></span>
+      </div>
+    </div>
+  `;
+}
+
+// ─── SV 액션 포인트 (자동 생성) ────────────────────────────
+function renderSignals(data, sv) {
+  const c = data.current;
+  const b = data.benchmarks;
+  const pb = sv.profitBenchmarks;
+  const signals = [];
+
+  // 1. 매출원가율 알람
+  if (data.alerts && data.alerts.foodCostRatio) {
+    signals.push({
+      type: 'alert', icon: '🚨',
+      title: `매출원가율 ${pct(c.foodCostRatio)} — 데이터 이상 의심`,
+      detail: '통상 운영 범위(30~45%) 밖. 외부 사입 신고 누락 또는 데이터 오류 가능성. <strong>점주에게 비용 입력 가이드 재안내</strong> 필요.'
+    });
+  }
+
+  // 2. 임대료율
+  if (b.rentRatio.mean !== null && c.rentRatio > b.rentRatio.mean + 5) {
+    signals.push({
+      type: 'warn', icon: '⚠️',
+      title: `임대료율 ${pct(c.rentRatio)} — 동종 상권 평균(${pct(b.rentRatio.mean)}) 대비 +${(c.rentRatio - b.rentRatio.mean).toFixed(1)}%p`,
+      detail: `매장 입지상 단기 조정 불가. <strong>매출 확대로 비율 개선 필요.</strong> 현재 ${won(c.revenue)}로 동종 평균 대비 ${Math.round(((c.revenue / (pb.revenue.mean || c.revenue) - 1) * 100))}% 차이.`
+    });
+  }
+
+  // 3. 매출 하위권
+  if (pb.revenue.mean && c.revenue < pb.revenue.mean * 0.8) {
+    const delRatio = sv.revenueBreakdown.delivery.ratio;
+    signals.push({
+      type: 'warn', icon: '📉',
+      title: `매출 ${won(c.revenue)} — 동종 운영방식 평균 대비 하위권`,
+      detail: `배달 비중 ${pct(delRatio)}. ${delRatio > 60 ? '<strong>홀 매출 확대 또는 채널 다변화 검토</strong>' : '<strong>홀 매출 효율 양호. 추가 매출 확대 방안 검토</strong>'} 권장.`
+    });
+  }
+
+  // 4. 수수료율 우수
+  if (b.deliveryFeeRatio.mean !== null && c.deliveryFeeRatio < b.deliveryFeeRatio.mean - 3) {
+    signals.push({
+      type: 'good', icon: '✓',
+      title: `수수료율 ${pct(c.deliveryFeeRatio)} — 동종 매장 평균(${pct(b.deliveryFeeRatio.mean)}) 대비 양호`,
+      detail: `<strong>플랫폼 광고 최소화 / 자체 채널 활용 노하우 인터뷰</strong> 후 동종 매장 벤치마크 공유 권장.`
+    });
+  }
+
+  // 5. 매출원가율 효율 (알람 없을 때)
+  if (!data.alerts.foodCostRatio && c.foodCostRatio < 35) {
+    signals.push({
+      type: 'good', icon: '✓',
+      title: `매출원가율 ${pct(c.foodCostRatio)} — 권장 범위(35~40%) 직전`,
+      detail: `식자재 효율 양호. 본사 발주 시스템 잘 활용 중. <strong>현 상태 유지</strong>.`
+    });
+  }
+
+  // 6. 인건비율 안내
+  if (c.laborRatio < 8) {
+    signals.push({
+      type: 'info', icon: 'ℹ️',
+      title: `인건비율 ${pct(c.laborRatio)} — 직원만 계산 (점주 본인 인건비 미포함)`,
+      detail: `매장 운영 구조상 직원 비중 적음 → 점주 노동 부담 큼. <strong>SV 면담 시 점주 피로도 확인</strong> 권장.`
+    });
+  }
+
+  // 기본 (시그널 없을 때)
+  if (signals.length === 0) {
+    signals.push({
+      type: 'info', icon: 'ℹ️',
+      title: '특이사항 없음',
+      detail: '주요 지표가 정상 범위에 있어요. 다음 달 모니터링 계속.'
+    });
+  }
+
+  $('signals').innerHTML = `
+    <div class="signals-title">🚨 SV 액션 포인트</div>
+    ${signals.map(s => `
+      <div class="signal-item ${s.type}">
+        <div class="signal-icon">${s.icon}</div>
+        <div class="signal-text">
+          <strong>${s.title}</strong><br>
+          ${s.detail}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ─── 매장 메타 ─────────────────────────────────────────────
+function renderInfoTable(data, c) {
+  $('infoTable').innerHTML = `
+    <div class="info-title">📋 매장 정보</div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-label">호점</div><div class="info-cell-value">#${data.store.id}</div></div>
+      <div class="info-cell"><div class="info-cell-label">담당 SV</div><div class="info-cell-value">${escapeHtml(data.store.sv || '-')}</div></div>
+      <div class="info-cell"><div class="info-cell-label">지역 / 상권</div><div class="info-cell-value">${escapeHtml(data.store.region || '-')} / ${escapeHtml(data.store.zone || '-')}</div></div>
+      <div class="info-cell"><div class="info-cell-label">운영 방식</div><div class="info-cell-value">${escapeHtml(data.store.operation || '-')}</div></div>
+      <div class="info-cell"><div class="info-cell-label">홀 / 배달 비율</div><div class="info-cell-value">${c.hallRatio}% / ${c.deliveryRatio}%</div></div>
+      <div class="info-cell"><div class="info-cell-label">전월 데이터</div><div class="info-cell-value" style="color: ${data.previous ? 'var(--good)' : 'var(--warn)'}">${data.previous ? '있음' : '없음'}</div></div>
+    </div>
+  `;
+}
+
+// ─── 비용 항목 상세 ────────────────────────────────────────
+function renderCostCards(c, b, a, data) {
+  const di = (data.metadata && data.metadata.dataInfo) || {};
+  const periodLabel = di.monthCount ? `최근 ${di.monthCount}개월 데이터` : '';
+  $('costSectionSub').textContent = di.totalStores
+    ? `${di.totalStores}개 매장 · ${periodLabel}` : '동종 매장 비교';
+
+  const cards = [
+    { key: 'foodCostRatio', name: '매출원가율', range: [5, 60], comment: foodCostComment },
+    { key: 'rentRatio', name: '임대료율', range: [3, 18], comment: rentComment },
+    { key: 'laborRatio', name: '인건비율', range: [0, 30], comment: laborComment },
+    { key: 'deliveryFeeRatio', name: '배달플랫폼 수수료율', range: [10, 45], comment: feeComment },
+  ];
+
+  $('costCards').innerHTML = cards.map(card => {
+    const value = c[card.key];
+    const bench = b[card.key];
+    const isAlert = (card.key === 'foodCostRatio' && a.foodCostRatio);
+    const [rMin, rMax] = card.range;
+
+    let badge, badgeCls, mineCls = '';
+    if (isAlert) { badge = '🚨 이상'; badgeCls = 'bad'; mineCls = 'bad'; }
+    else if (bench && value <= bench.mean) { badge = '양호'; badgeCls = 'good'; }
+    else if (bench && value <= bench.q3) { badge = '평균 이상'; badgeCls = 'warn'; mineCls = 'warn'; }
+    else { badge = '평균 초과'; badgeCls = 'bad'; mineCls = 'bad'; }
+
+    const diff = bench && bench.mean !== null ? (value - bench.mean) : null;
+    const diffSign = diff !== null && diff > 0 ? '+' : '';
+    const diffCls = diff !== null && diff > 0 ? 'up' : 'down';
+
+    // 분포 그래프
+    const meanPos = bench && bench.mean !== null ? norm(bench.mean, rMin, rMax) : 50;
+    const myPos = norm(value, rMin, rMax);
+    const iqrLeft = bench && bench.q1 !== null ? norm(bench.q1, rMin, rMax) : 0;
+    const iqrRight = bench && bench.q3 !== null ? 100 - norm(bench.q3, rMin, rMax) : 100;
+
+    const markerCls = isAlert ? 'bad' : (badgeCls === 'good' ? 'good' : badgeCls === 'warn' ? 'warn' : 'bad');
+
+    return `
+      <div class="cost-card">
+        <div class="cost-head">
+          <div class="cost-name">${card.name}</div>
+          <span class="cost-badge ${badgeCls}">${badge}</span>
+        </div>
+        <div class="cost-numbers">
+          <div class="cost-mine ${mineCls}">${pct(value)}</div>
+          <div>
+            <div class="cost-vs">${bench ? escapeHtml(bench.groupLabel) : '-'}</div>
+            <div class="cost-vs-val">평균 ${bench && bench.mean !== null ? pct(bench.mean) : '-'} ${diff !== null ? `<span class="cost-diff ${diffCls}">${diffSign}${diff.toFixed(1)}%p</span>` : ''}</div>
+          </div>
+        </div>
+        <div class="cost-context">${bench ? `${bench.n}건 · Q1 ${pct(bench.q1)} / Q3 ${pct(bench.q3)} · 효율 상위 평균 ${pct(bench.top25Avg)}` : ''}</div>
+        <div class="cost-bar-wrap">
+          <div class="cost-bar-iqr" style="left: ${iqrLeft}%; right: ${iqrRight}%;"></div>
+          <div class="cost-bar-mean" style="left: ${meanPos}%;"></div>
+          <div class="cost-bar-marker ${markerCls}" style="left: ${myPos}%;"></div>
+        </div>
+        <div class="cost-ranges"><span>${rMin}%</span><span>${rMax}%</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function foodCostComment() { return ''; }
+function rentComment() { return ''; }
+function laborComment() { return ''; }
+function feeComment() { return ''; }
+
+// ─── 푸터 ───────────────────────────────────────────────────
+function renderFooter(data) {
+  const di = (data.metadata && data.metadata.dataInfo) || {};
+  if (di.monthFromLabel && di.monthToLabel) {
+    $('footerDataInfo').innerHTML = `· 분석 기준: ${di.totalStores}개 매장 / ${di.monthFromLabel} ~ ${di.monthToLabel} 누적 데이터<br>· ${data.month} 통계는 ${data.month} 이전 데이터로 계산 (롤링 윈도우)`;
+  }
+}
+
+// ─── 에러 표시 ─────────────────────────────────────────────
+function showError(title, message) {
+  $('loaderScreen').classList.add('hidden');
+  $('reportApp').classList.add('hidden');
+  $('errorScreen').classList.remove('hidden');
+  $('errorTitle').textContent = title;
+  $('errorMessage').textContent = message;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 메인
+// ═══════════════════════════════════════════════════════════
+(async function main() {
+  const { store, month } = getParams();
+  if (!store || !month) {
+    showError('매장 정보가 부족해요', 'URL에 store와 month 파라미터가 필요해요.\n예: ?store=구리돌다리점&month=2026-05');
+    return;
+  }
+  try {
+    const data = await fetchReport(store, month);
+    if (!data.svDetails) {
+      showError('SV 데이터를 불러올 수 없어요', 'mode=sv 옵션이 적용되지 않았어요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+    render(data);
+  } catch (err) {
+    const msg = String(err.message || '');
+    showError('리포트를 불러올 수 없어요', msg || '잠시 후 다시 시도해 주세요.');
+  }
+})();
+</script>
+
+</body>
+</html>
