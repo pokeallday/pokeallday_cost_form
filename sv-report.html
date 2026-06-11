@@ -228,6 +228,24 @@
     border-radius: 8px;
     border: 1px solid var(--border-light);
   }
+  /* 컬럼 라벨 헤더 (전체%/플랫폼%/금액) */
+  .wf-platform-col-labels {
+    display: flex; align-items: center;
+    padding: 0 0 4px;
+    margin-bottom: 4px;
+    font-size: 9px;
+    color: var(--text-faint);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .wf-platform-col-labels .col-name { flex: 1; }
+  .wf-platform-col-labels .col-pct-total,
+  .wf-platform-col-labels .col-pct-platform {
+    flex: 0 0 56px; text-align: right;
+  }
+  .wf-platform-col-labels .col-amount {
+    flex: 0 0 100px; text-align: right;
+  }
   .wf-platform-head {
     display: flex; align-items: center;
     padding-bottom: 6px;
@@ -246,11 +264,17 @@
   .wf-platform-name .pdot.baemin { background: #14B8A6; }
   .wf-platform-name .pdot.coupang { background: #F59E0B; }
   .wf-platform-name .pdot.yogiyo { background: #EF4444; }
-  .wf-platform-pct {
-    font-size: 11px; font-weight: 600; color: var(--text-sub);
-    margin: 0 10px 0 6px;
+  .wf-platform-pct-total,
+  .wf-platform-pct-platform {
+    flex: 0 0 56px; text-align: right;
+    font-size: 11px; font-weight: 700;
+    color: var(--text-sub);
+  }
+  .wf-platform-pct-platform {
+    color: #5B21B6;
   }
   .wf-platform-amount {
+    flex: 0 0 100px; text-align: right;
     font-size: 12px; font-weight: 700; color: var(--bad);
   }
   .wf-sub-detail {
@@ -262,7 +286,17 @@
     flex: 1;
     color: var(--text-sub);
   }
+  .wf-sub-detail-pct-total,
+  .wf-sub-detail-pct-platform {
+    flex: 0 0 56px; text-align: right;
+    font-size: 10px; font-weight: 600;
+    color: var(--text-sub);
+  }
+  .wf-sub-detail-pct-platform {
+    color: #7C3AED;
+  }
   .wf-sub-detail-amount {
+    flex: 0 0 100px; text-align: right;
     font-size: 11px; font-weight: 600;
     color: var(--bad);
   }
@@ -276,6 +310,12 @@
     font-size: 10px;
     color: var(--text-faint);
     line-height: 1.5;
+  }
+  .wf-platform-revenue {
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--text-faint);
+    text-align: right;
   }
 
   /* 수익성 비교 */
@@ -653,38 +693,58 @@ function renderWaterfall(sv, revenue) {
   const fee = cb.platformFee.items;
 
   // 플랫폼별 그룹 렌더링 (배민/쿠팡이츠/요기요)
-  // - 항목별로 금액 표시, 양수면 비용(빨강), 음수면 보조/할인(초록)
+  // - 항목별로 금액 + 두 비율(전체 매출 대비, 플랫폼 매출 대비) 표시
+  // - 양수면 비용(빨강), 음수면 보조/할인(초록)
   // - 0인 항목은 숨겨서 정보 노이즈 최소화
-  const platformGroup = (key, name, platform, items) => {
-    const rows = items
-      .filter(it => Math.abs(Number(it.amount || 0)) >= 1)
-      .map(it => {
-        const amt = Number(it.amount || 0);
-        const isPositive = amt > 0;  // 수수료/광고비 = 양수 = 비용
+  const platformGroup = (key, name, platform, itemKeys) => {
+    // itemKeys: [{ key: 'storeClick', label: '우리가게클릭 (광고)' }, ...]
+    const rows = itemKeys
+      .map(spec => {
+        const item = platform.items[spec.key];
+        if (!item) return null;
+        const amt = Number(item.amount || 0);
+        if (Math.abs(amt) < 1) return null;  // 0원 항목 숨김
+        const isPositive = amt > 0;
         const cls = isPositive ? '' : 'plus';
         const sign = isPositive ? '−' : '+';
         const absStr = Math.round(Math.abs(amt)).toLocaleString('ko-KR') + '원';
+        const rt = item.ratioTotal.toFixed(1);
+        const rp = item.ratioPlatform.toFixed(1);
         return `
           <div class="wf-sub-detail">
-            <div class="wf-sub-detail-label">· ${escapeHtml(it.label)}</div>
+            <div class="wf-sub-detail-label">· ${escapeHtml(spec.label)}</div>
+            <div class="wf-sub-detail-pct-total">${rt}%</div>
+            <div class="wf-sub-detail-pct-platform">${rp}%</div>
             <div class="wf-sub-detail-amount ${cls}">${sign}${absStr}</div>
           </div>
         `;
       })
+      .filter(Boolean)
       .join('');
     const noteHtml = key === 'baemin'
       ? '<div class="wf-platform-note">※ 배민 부담금 / 보정금은 시트 기재값을 그대로 표시 (시점 보정·환불 포함)</div>'
       : '';
+    const revHtml = platform.revenue > 0
+      ? `<div class="wf-platform-revenue">${escapeHtml(name)} 매출: ${won(platform.revenue)}</div>`
+      : '';
     return `
       <div class="wf-platform-group">
+        <div class="wf-platform-col-labels">
+          <span class="col-name"></span>
+          <span class="col-pct-total">전체%</span>
+          <span class="col-pct-platform">${escapeHtml(name)}%</span>
+          <span class="col-amount">금액</span>
+        </div>
         <div class="wf-platform-head">
           <div class="wf-platform-name">
             <span class="pdot ${key}"></span>${escapeHtml(name)}
           </div>
-          <div class="wf-platform-pct">${platform.ratio.toFixed(1)}%</div>
+          <div class="wf-platform-pct-total">${platform.ratioTotal.toFixed(1)}%</div>
+          <div class="wf-platform-pct-platform">${platform.ratioPlatform.toFixed(1)}%</div>
           <div class="wf-platform-amount">−${won(platform.total)}</div>
         </div>
         ${rows || '<div class="wf-sub-detail"><div class="wf-sub-detail-label" style="color:var(--text-faint)">· 세부 항목 없음</div></div>'}
+        ${revHtml}
         ${noteHtml}
       </div>
     `;
@@ -765,19 +825,19 @@ function renderWaterfall(sv, revenue) {
         <span class="wf-section-pct">${cb.platformFee.ratio.toFixed(1)}%</span>
       </div>
       ${platformGroup('baemin', '배민', fee.baemin, [
-        { label: '우리가게클릭 (광고)', amount: fee.baemin.items.storeClick },
-        { label: '음식배달수수료 (중개)', amount: fee.baemin.items.serviceFee },
-        { label: '배민 부담금 (보조)', amount: fee.baemin.items.baeminSupport },
-        { label: '보정금', amount: fee.baemin.items.correction },
+        { key: 'storeClick',    label: '우리가게클릭 (광고)' },
+        { key: 'serviceFee',    label: '음식배달수수료 (중개)' },
+        { key: 'baeminSupport', label: '배민 부담금 (보조)' },
+        { key: 'correction',    label: '보정금' },
       ])}
       ${platformGroup('coupang', '쿠팡이츠', fee.coupang, [
-        { label: '쿠팡 수수료 (중개)', amount: fee.coupang.items.fee1 },
-        { label: 'Product Ads (광고)', amount: fee.coupang.items.ads1 },
-        { label: '쿠팡 수수료 (2차)', amount: fee.coupang.items.fee2 },
-        { label: 'Product Ads (2차)', amount: fee.coupang.items.ads2 },
+        { key: 'fee1', label: '쿠팡 수수료 (중개)' },
+        { key: 'ads1', label: 'Product Ads (광고)' },
+        { key: 'fee2', label: '쿠팡 수수료 (2차)' },
+        { key: 'ads2', label: 'Product Ads (2차)' },
       ])}
       ${platformGroup('yogiyo', '요기요', fee.yogiyo, [
-        { label: '요기요 매입 (수수료)', amount: fee.yogiyo.items.purchase },
+        { key: 'purchase', label: '요기요 매입 (수수료)' },
       ])}
       <div class="wf-subtotal"><span class="wf-subtotal-label">소계</span><span class="wf-subtotal-amount">−${won(cb.platformFee.total)}</span></div>
     </div>
