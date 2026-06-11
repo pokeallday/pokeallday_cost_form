@@ -137,6 +137,59 @@
     box-shadow: 0 0 0 3px var(--sv-light);
   }
   .toolbar-info { font-size: 12px; color: var(--text-sub); }
+  .btn-toolbar {
+    margin-left: auto;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    background: var(--bad); color: white;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: opacity 0.15s;
+  }
+  .btn-toolbar:hover { opacity: 0.88; }
+  .btn-toolbar:disabled { background: var(--bg-section); color: var(--text-faint); cursor: not-allowed; }
+
+  /* 모달 내부 전화번호 강조 박스 */
+  .phone-box {
+    background: var(--bg-section);
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin: 10px 0;
+    text-align: left;
+    border-left: 3px solid var(--sv);
+  }
+  .phone-box-label {
+    font-size: 11px; color: var(--text-sub); font-weight: 600; margin-bottom: 2px;
+  }
+  .phone-box-value {
+    font-size: 18px; font-weight: 800; color: var(--sv);
+    letter-spacing: -0.02em;
+  }
+  .phone-box-note {
+    font-size: 11px; color: var(--warn); margin-top: 4px; font-weight: 600;
+  }
+
+  /* 일괄 발송 매장 리스트 (모달) */
+  .bulk-list {
+    background: var(--bg-section);
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-align: left;
+    max-height: 240px;
+    overflow-y: auto;
+    margin: 10px 0;
+  }
+  .bulk-item {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 4px 0;
+    font-size: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .bulk-item:last-child { border-bottom: none; }
+  .bulk-item-name { font-weight: 600; color: var(--text); }
+  .bulk-item-phone { color: var(--text-sub); font-variant-numeric: tabular-nums; }
 
   /* ─── 매장 테이블 ─── */
   .store-table {
@@ -364,6 +417,7 @@
     <div class="toolbar">
       <input type="text" id="searchInput" class="search-input" placeholder="🔍 매장명 검색...">
       <div class="toolbar-info" id="toolbarInfo">전체 0개 매장 표시중</div>
+      <button id="bulkReminderBtn" class="btn-toolbar" style="display:none;">📱 미입력 매장 일괄 발송</button>
     </div>
 
     <table class="store-table">
@@ -524,6 +578,20 @@ function openOwnerReportPreview(ownerUrl) {
   window.open(ownerUrl, '_blank');
 }
 
+function phoneBox(phone) {
+  const phoneText = phone || '⚠ 연락처 없음 (가맹점 리스트 시트 확인 필요)';
+  const noteText = phone
+    ? '※ 양도양수 시 잘못된 대상에게 발송될 수 있어요. 가맹점 리스트의 연락처를 먼저 확인하세요'
+    : '※ 가맹점 리스트 시트에 연락처가 등록되어 있지 않아요';
+  return `
+    <div class="phone-box">
+      <div class="phone-box-label">발송 대상 전화번호</div>
+      <div class="phone-box-value">${escapeHtml(phoneText)}</div>
+      <div class="phone-box-note">${noteText}</div>
+    </div>
+  `;
+}
+
 function handleSendReminder(s) {
   const cnt = (s.reminderHistory && s.reminderHistory.count) || 0;
   const warning = cnt > 0
@@ -533,7 +601,8 @@ function handleSendReminder(s) {
     icon: '📱',
     title: '비용 입력 요청 알림톡 보내기',
     msg: `<strong>${escapeHtml(s.name)}</strong> 점주에게<br>
-          이번 달 비용 입력 요청 알림톡을 보낼까요?<br><br>
+          이번 달 비용 입력 요청 알림톡을 보낼까요?
+          ${phoneBox(s.phone)}
           <span style="color:var(--text-light);font-size:11px;">건당 ~10원의 알림톡 비용이 발생해요.</span>`,
     warning: warning,
     confirm: cnt > 0 ? '재발송' : '발송하기',
@@ -543,7 +612,6 @@ function handleSendReminder(s) {
         showToast(`${s.name} 알림톡 발송 중…`);
         await callAction('sendReminder', s.name, DATA.month);
         showToast(`✅ ${s.name} 비용 입력 요청 발송 완료 · 새로고침합니다`, 'success');
-        // 시트 동기화 보장 위해 1.5초 대기 후 페이지 전체 새로고침
         setTimeout(() => location.reload(), 1500);
       } catch (err) {
         showToast(`❌ ${err.message || '발송 실패'}`, 'error');
@@ -561,7 +629,8 @@ function handleSendReport(s) {
     icon: '📊',
     title: '점주 리포트 발송',
     msg: `<strong>${escapeHtml(s.name)}</strong> 점주에게<br>
-          이번 달 점주 리포트 알림톡을 보낼까요?<br><br>
+          이번 달 점주 리포트 알림톡을 보낼까요?
+          ${phoneBox(s.phone)}
           <span style="color:var(--text-light);font-size:11px;">점주는 본인 토큰이 포함된 가맹점 리포트 URL을 받아요.</span>`,
     warning: warning,
     confirm: cnt > 0 ? '재발송' : '리포트 발송',
@@ -572,6 +641,62 @@ function handleSendReport(s) {
         await callAction('sendReport', s.name, DATA.month);
         showToast(`✅ ${s.name} 점주 리포트 발송 완료 · 새로고침합니다`, 'success');
         setTimeout(() => location.reload(), 1500);
+      } catch (err) {
+        showToast(`❌ ${err.message || '발송 실패'}`, 'error');
+      }
+    },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// 일괄 발송 (미입력 매장 전체)
+// ═══════════════════════════════════════════════════════════
+async function fetchBulkReminder(sv, month) {
+  const url = `${APPS_SCRIPT_URL}?action=sendBulkReminder&sv=${encodeURIComponent(sv)}&month=${encodeURIComponent(month)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('네트워크 오류 (' + res.status + ')');
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || '발송 실패');
+  return json.data;
+}
+
+function handleBulkReminder() {
+  const missing = DATA.stores.filter(s => s.status === 'missing');
+  if (missing.length === 0) {
+    showToast('미입력 매장이 없어요', 'success');
+    return;
+  }
+  const listHtml = missing.map(s => `
+    <div class="bulk-item">
+      <span class="bulk-item-name">${escapeHtml(s.name)} ${s.id ? '#' + escapeHtml(s.id) : ''}</span>
+      <span class="bulk-item-phone">${escapeHtml(s.phone || '⚠ 연락처 없음')}</span>
+    </div>
+  `).join('');
+  const noPhoneCount = missing.filter(s => !s.phone).length;
+  const noPhoneWarning = noPhoneCount > 0
+    ? `⚠ <strong>${noPhoneCount}개 매장</strong>은 연락처가 없어서 발송에서 제외돼요.`
+    : null;
+  openConfirm({
+    icon: '📱',
+    title: `미입력 ${missing.length}개 매장 일괄 발송`,
+    msg: `<strong>${DATA.sv} SV</strong> 담당 미입력 매장 <strong>${missing.length}개</strong>에<br>
+          비용 입력 요청 알림톡을 일괄 발송할까요?
+          <div class="bulk-list">${listHtml}</div>
+          <span style="color:var(--text-light);font-size:11px;">
+            ${missing.length}건 발송 · 약 ${missing.length * 10}원 알림톡 비용 · 양도양수 매장 연락처 확인 필수
+          </span>`,
+    warning: noPhoneWarning,
+    confirm: `${missing.length}개 매장에 발송`,
+    confirmClass: 'btn-alert',
+    onConfirm: async () => {
+      try {
+        showToast(`${missing.length}개 매장 일괄 발송 중…`);
+        const result = await fetchBulkReminder(DATA.sv, DATA.month);
+        const msg = result.failed > 0
+          ? `✅ ${result.success}건 발송, ${result.failed}건 실패`
+          : `✅ ${result.success}건 발송 완료 · 새로고침합니다`;
+        showToast(msg, result.failed > 0 ? 'error' : 'success');
+        setTimeout(() => location.reload(), 1800);
       } catch (err) {
         showToast(`❌ ${err.message || '발송 실패'}`, 'error');
       }
@@ -591,6 +716,18 @@ function renderHeader(data) {
   const monthLabel = year && m ? `${year}년 ${parseInt(m, 10)}월` : data.month;
   $('heroTitle').textContent = `${data.sv} SV`;
   $('heroSub').textContent = `${monthLabel} · 담당 매장 ${data.summary.totalStores}개`;
+}
+
+function renderBulkBtn(data) {
+  const cnt = data.summary.missingCount;
+  const btn = $('bulkReminderBtn');
+  if (cnt > 0) {
+    btn.style.display = '';
+    btn.textContent = `📱 미입력 ${cnt}개 일괄 비용 입력 요청`;
+    btn.onclick = handleBulkReminder;
+  } else {
+    btn.style.display = 'none';
+  }
 }
 
 function renderSummaryBar(data) {
@@ -821,6 +958,7 @@ function render(data) {
   $('content').style.display = 'block';
   renderHeader(data);
   renderSummaryBar(data);
+  renderBulkBtn(data);
   renderStoreList(data);
 }
 
