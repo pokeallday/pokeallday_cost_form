@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#5B21B6">
+<title>SV 대시보드 — 포케올데이</title>
+
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --sv: #5B21B6;
+    --sv-dark: #4C1D95;
+    --sv-light: #EDE9FE;
+    --brand: #00A472;
+    --text: #111827;
+    --text-sub: #6B7280;
+    --text-light: #9CA3AF;
+    --text-faint: #D1D5DB;
+    --bg: #FFFFFF;
+    --bg-soft: #F9FAFB;
+    --bg-section: #F3F4F6;
+    --border: #E5E7EB;
+    --border-light: #F3F4F6;
+    --good: #10B981;
+    --good-bg: #ECFDF5;
+    --warn: #F59E0B;
+    --warn-bg: #FFFBEB;
+    --bad: #EF4444;
+    --bad-bg: #FEF2F2;
+    --alert: #DC2626;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: var(--text); background: var(--bg-section);
+    -webkit-font-smoothing: antialiased;
+  }
+  body { min-height: 100vh; }
+  .app { max-width: 520px; margin: 0 auto; background: var(--bg); min-height: 100vh; }
+
+  /* ─── 로딩 / 에러 ─── */
+  .loader-screen, .error-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 24px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid var(--sv-light);
+    border-top-color: var(--sv); border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: 14px; color: var(--text-sub); }
+  .loader-sub { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .error-screen .err-icon { font-size: 48px; margin-bottom: 12px; }
+  .error-screen .err-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .error-screen .err-msg { font-size: 13px; color: var(--text-sub); line-height: 1.6; white-space: pre-line; }
+
+  /* ─── 헤더 ─── */
+  .hero {
+    background: linear-gradient(135deg, var(--sv) 0%, var(--sv-dark) 100%);
+    color: white; padding: 24px 20px 20px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -40%; right: -10%;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.18); color: white;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    padding: 4px 8px; border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .hero-title { font-size: 22px; font-weight: 800; margin: 0 0 4px; }
+  .hero-sub { font-size: 13px; opacity: 0.85; }
+  .hero-meta { font-size: 11px; opacity: 0.7; margin-top: 6px; }
+
+  /* ─── KPI 4분할 ─── */
+  .kpi-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border-light);
+    margin: 0;
+  }
+  .kpi-cell {
+    background: var(--bg); padding: 14px 16px;
+    text-align: center;
+  }
+  .kpi-label {
+    font-size: 11px; color: var(--text-sub); font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-size: 20px; font-weight: 800; color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .kpi-value.good { color: var(--good); }
+  .kpi-value.warn { color: var(--warn); }
+  .kpi-value.bad { color: var(--bad); }
+  .kpi-value.sv { color: var(--sv); }
+  .kpi-sub {
+    font-size: 10px; color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  /* ─── 매출/이익 요약 ─── */
+  .summary-card {
+    margin: 12px;
+    background: var(--bg-soft);
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-light);
+  }
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+  .summary-row + .summary-row { border-top: 1px dashed var(--border); }
+  .summary-label { color: var(--text-sub); }
+  .summary-value { font-weight: 700; color: var(--text); }
+
+  /* ─── 필터 탭 ─── */
+  .filter-tabs {
+    display: flex; gap: 6px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    background: var(--bg);
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .filter-tab {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 16px;
+    background: var(--bg-section);
+    color: var(--text-sub);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+  }
+  .filter-tab.active {
+    background: var(--sv);
+    color: white;
+  }
+  .filter-tab.warn.active { background: var(--warn); }
+  .filter-tab.bad.active { background: var(--bad); }
+  .filter-tab.good.active { background: var(--good); }
+
+  /* ─── 매장 카드 ─── */
+  .store-list { padding: 8px 12px 20px; }
+  .store-card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .store-card.good { border-left: 4px solid var(--good); }
+  .store-card.warning { border-left: 4px solid var(--warn); background: var(--warn-bg); }
+  .store-card.missing { border-left: 4px solid var(--bad); background: var(--bad-bg); }
+  .store-card.normal { border-left: 4px solid var(--text-light); }
+
+  .store-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .store-head-left { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .store-emoji { font-size: 16px; }
+  .store-name { font-size: 15px; font-weight: 800; color: var(--text); }
+  .store-id { font-size: 11px; color: var(--text-light); }
+  .store-badge {
+    flex-shrink: 0;
+    padding: 3px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .store-badge.good { background: var(--good); color: white; }
+  .store-badge.warning { background: var(--warn); color: white; }
+  .store-badge.missing { background: var(--bad); color: white; }
+  .store-badge.normal { background: var(--text-light); color: white; }
+
+  .store-meta {
+    font-size: 11px; color: var(--text-sub);
+    margin-bottom: 10px;
+  }
+  .store-meta .dot { color: var(--text-faint); margin: 0 4px; }
+
+  .store-kpi {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 10px;
+  }
+  .store-kpi-cell {
+    background: white; border: 1px solid var(--border-light);
+    border-radius: 8px; padding: 8px 10px;
+  }
+  .store-card.warning .store-kpi-cell,
+  .store-card.missing .store-kpi-cell {
+    background: rgba(255,255,255,0.7);
+  }
+  .store-kpi-label {
+    font-size: 10px; color: var(--text-sub); font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .store-kpi-value {
+    font-size: 14px; font-weight: 800; color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .store-kpi-sub {
+    font-size: 10px; color: var(--text-light); margin-top: 1px;
+  }
+  .store-kpi-sub.up { color: var(--good); }
+  .store-kpi-sub.down { color: var(--bad); }
+
+  .store-issues {
+    background: rgba(255,255,255,0.6);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 11px; color: var(--text-sub);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .store-issues .issue {
+    display: flex; gap: 4px;
+  }
+  .store-issues .issue::before {
+    content: '⚠'; color: var(--warn);
+  }
+
+  .store-missing-info {
+    font-size: 12px; color: var(--text-sub);
+    margin-bottom: 10px;
+  }
+
+  /* ─── 버튼 ─── */
+  .store-actions {
+    display: flex; gap: 6px;
+  }
+  .btn {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px;
+    transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--sv); color: white;
+  }
+  .btn-secondary {
+    background: white; color: var(--sv);
+    border: 1px solid var(--sv);
+  }
+  .btn-alert {
+    background: var(--bad); color: white;
+  }
+  .btn-success {
+    background: var(--good); color: white;
+  }
+
+  /* ─── 푸터 ─── */
+  .footer {
+    padding: 20px 16px 32px;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 10px;
+    line-height: 1.6;
+    border-top: 1px solid var(--border-light);
+    margin-top: 16px;
+  }
+  .footer-brand { font-weight: 700; color: var(--text-sub); margin-bottom: 4px; }
+
+  /* ─── 모달 ─── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal {
+    background: white; border-radius: 16px;
+    padding: 24px; max-width: 360px; width: 100%;
+    text-align: center;
+  }
+  .modal-icon { font-size: 36px; margin-bottom: 8px; }
+  .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .modal-msg { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 18px; }
+  .modal-msg strong { color: var(--text); }
+  .modal-actions { display: flex; gap: 8px; }
+  .modal-actions .btn { padding: 10px; font-size: 13px; }
+
+  /* ─── 토스트 ─── */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--text); color: white;
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: toast-in 0.2s ease-out;
+  }
+  .toast.success { background: var(--good); }
+  .toast.error { background: var(--bad); }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- 로딩 -->
+  <div id="loader" class="loader-screen">
+    <div class="spinner"></div>
+    <div class="loader-text">SV 대시보드 불러오는 중…</div>
+    <div class="loader-sub">담당 매장 정보를 정리하고 있어요</div>
+  </div>
+
+  <!-- 에러 -->
+  <div id="error" class="error-screen" style="display:none;">
+    <div class="err-icon">⚠️</div>
+    <div class="err-title" id="errorTitle">데이터를 불러올 수 없어요</div>
+    <div class="err-msg" id="errorMsg">잠시 후 다시 시도해 주세요.</div>
+  </div>
+
+  <!-- 본문 -->
+  <div id="content" style="display:none;">
+    <div class="hero">
+      <span class="hero-tag">SV DASHBOARD · INTERNAL</span>
+      <h1 class="hero-title" id="heroTitle">SV 대시보드</h1>
+      <div class="hero-sub" id="heroSub">담당 매장 운영 현황</div>
+      <div class="hero-meta" id="heroMeta"></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-cell">
+        <div class="kpi-label">담당 매장</div>
+        <div class="kpi-value sv" id="kpiTotal">-</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">입력 완료</div>
+        <div class="kpi-value good" id="kpiSubmitted">-</div>
+        <div class="kpi-sub" id="kpiSubmittedSub"></div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">검토 필요</div>
+        <div class="kpi-value warn" id="kpiWarning">-</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">미입력</div>
+        <div class="kpi-value bad" id="kpiMissing">-</div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-row">
+        <span class="summary-label">총 매출 (입력 매장)</span>
+        <span class="summary-value" id="sumRevenue">-</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">총 영업이익</span>
+        <span class="summary-value" id="sumOperating">-</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">총 순이익</span>
+        <span class="summary-value" id="sumNet">-</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">평균 영업이익률</span>
+        <span class="summary-value"><span id="sumAvgOpRatio">-</span> <span style="color:var(--text-light);font-size:11px;">(동종 평균 <span id="benchOp">-</span>)</span></span>
+      </div>
+    </div>
+
+    <div class="filter-tabs" id="filterTabs"></div>
+
+    <div class="store-list" id="storeList"></div>
+
+    <div class="footer">
+      <div class="footer-brand">POKE ALL DAY · SV INTERNAL</div>
+      <div>본 대시보드는 본사 내부 운영 자료입니다.<br>
+      매월 매장 데이터 입력 후 SV가 검토 → 점주에게 리포트 발송.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 모달 (확인용) -->
+<div id="modal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-icon" id="modalIcon">📱</div>
+    <div class="modal-title" id="modalTitle">알림톡 발송</div>
+    <div class="modal-msg" id="modalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary" id="modalConfirm">발송</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// 설정
+// ═══════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwh4fpveSQRXqEmNPLiilBfMRJ0kSTggn_XocsptG4KgVQdIE-H47x5-5ShrdqJ6uJQ/exec';
+const REPORT_BASE = location.origin + location.pathname.replace(/\/[^/]*$/, '');
+
+// ═══════════════════════════════════════════════════════════
+// 유틸
+// ═══════════════════════════════════════════════════════════
+const $ = (id) => document.getElementById(id);
+const won = (n) => Math.round(Number(n || 0)).toLocaleString('ko-KR') + '원';
+const wonM = (n) => {
+  const v = Number(n || 0);
+  if (Math.abs(v) >= 1e8) return (v / 1e8).toFixed(1) + '억';
+  if (Math.abs(v) >= 1e4) return (v / 1e4).toFixed(0) + '만';
+  return v.toLocaleString('ko-KR');
+};
+const pct = (n) => (n === null || n === undefined ? '-' : Math.round(n * 10) / 10 + '%');
+const escapeHtml = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function getParams() {
+  const p = new URLSearchParams(location.search);
+  return {
+    sv: p.get('sv') || '',
+    month: p.get('month') || '',
+  };
+}
+
+async function fetchDashboard(sv, month) {
+  const url = `${APPS_SCRIPT_URL}?action=svDashboard&sv=${encodeURIComponent(sv)}&month=${encodeURIComponent(month)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('네트워크 오류 (' + res.status + ')');
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || '대시보드를 불러올 수 없어요');
+  return json.data;
+}
+
+async function callAction(action, storeName, month) {
+  const url = `${APPS_SCRIPT_URL}?action=${action}&store=${encodeURIComponent(storeName)}&month=${encodeURIComponent(month)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('네트워크 오류 (' + res.status + ')');
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || '발송 실패');
+  return json.data;
+}
+
+function showError(title, msg) {
+  $('loader').style.display = 'none';
+  $('content').style.display = 'none';
+  $('error').style.display = 'flex';
+  $('errorTitle').textContent = title;
+  $('errorMsg').textContent = msg;
+}
+
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type || '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ═══════════════════════════════════════════════════════════
+// 모달
+// ═══════════════════════════════════════════════════════════
+let modalAction = null;
+
+function openModal(opts) {
+  $('modalIcon').textContent = opts.icon || '📱';
+  $('modalTitle').textContent = opts.title || '확인';
+  $('modalMsg').innerHTML = opts.msg || '';
+  $('modalConfirm').textContent = opts.confirm || '발송';
+  $('modalConfirm').className = 'btn ' + (opts.confirmClass || 'btn-primary');
+  modalAction = opts.onConfirm;
+  $('modal').style.display = 'flex';
+}
+
+function closeModal() {
+  $('modal').style.display = 'none';
+  modalAction = null;
+}
+
+$('modalConfirm').addEventListener('click', async () => {
+  if (modalAction) {
+    const cb = modalAction;
+    closeModal();
+    await cb();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 렌더링
+// ═══════════════════════════════════════════════════════════
+let DATA = null;
+let CURRENT_FILTER = 'all';
+
+function renderHeader(data) {
+  const [year, m] = (data.month || '').split('-');
+  const monthLabel = year && m ? `${year}년 ${parseInt(m, 10)}월` : data.month;
+  $('heroTitle').textContent = `${data.sv} SV`;
+  $('heroSub').textContent = `${monthLabel} · 담당 매장 ${data.summary.totalStores}개`;
+  $('heroMeta').textContent = `검토 ${data.summary.warningCount} · 우수 ${data.summary.goodCount} · 미입력 ${data.summary.missingCount}`;
+}
+
+function renderKPI(data) {
+  const s = data.summary;
+  $('kpiTotal').textContent = s.totalStores + '개';
+  $('kpiSubmitted').textContent = s.submittedCount + '개';
+  $('kpiSubmittedSub').textContent = `${s.submittedCount}/${s.totalStores}`;
+  $('kpiWarning').textContent = s.warningCount + '개';
+  $('kpiMissing').textContent = s.missingCount + '개';
+}
+
+function renderSummary(data) {
+  const s = data.summary;
+  $('sumRevenue').textContent = won(s.totalRevenue);
+  $('sumOperating').textContent = won(s.totalOperatingProfit);
+  $('sumNet').textContent = won(s.totalNetProfit);
+  $('sumAvgOpRatio').textContent = pct(s.avgOperatingRatio);
+  $('benchOp').textContent = pct(data.benchmark.operatingRatio);
+}
+
+function renderFilterTabs(data) {
+  const s = data.summary;
+  const tabs = [
+    { key: 'all',     label: `전체 ${s.totalStores}` },
+    { key: 'good',    label: `우수 ${s.goodCount}`,        cls: 'good' },
+    { key: 'warning', label: `검토 ${s.warningCount}`,      cls: 'warn' },
+    { key: 'missing', label: `미입력 ${s.missingCount}`,    cls: 'bad' },
+  ];
+  $('filterTabs').innerHTML = tabs.map(t => `
+    <button class="filter-tab ${t.cls || ''} ${CURRENT_FILTER === t.key ? 'active' : ''}"
+            data-filter="${t.key}">
+      ${escapeHtml(t.label)}
+    </button>
+  `).join('');
+  document.querySelectorAll('.filter-tab').forEach(el => {
+    el.addEventListener('click', () => {
+      CURRENT_FILTER = el.dataset.filter;
+      renderFilterTabs(DATA);
+      renderStoreList(DATA);
+    });
+  });
+}
+
+function statusBadge(status) {
+  const map = {
+    good: '🟢 우수',
+    warning: '🟡 검토 필요',
+    missing: '🔴 미입력',
+    normal: '⚪ 보통',
+  };
+  return map[status] || map.normal;
+}
+
+function statusEmoji(status) {
+  return ({ good: '🟢', warning: '🟡', missing: '🔴', normal: '⚪' })[status] || '⚪';
+}
+
+function deltaSpan(v) {
+  if (v === null || v === undefined || isNaN(v)) return '';
+  const sign = v >= 0 ? '+' : '';
+  const cls = v >= 0 ? 'up' : 'down';
+  return `<div class="store-kpi-sub ${cls}">${sign}${v}%p vs 평균</div>`;
+}
+
+function renderStoreList(data) {
+  const filter = CURRENT_FILTER;
+  let stores = data.stores;
+  if (filter !== 'all') {
+    stores = stores.filter(s => s.status === filter);
+  }
+
+  if (stores.length === 0) {
+    $('storeList').innerHTML = `
+      <div style="padding: 40px 20px; text-align: center; color: var(--text-light); font-size: 13px;">
+        해당하는 매장이 없어요
+      </div>
+    `;
+    return;
+  }
+
+  $('storeList').innerHTML = stores.map(s => renderStoreCard(s)).join('');
+
+  // 버튼 이벤트 바인딩
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      const storeName = btn.dataset.store;
+      const storeId = btn.dataset.id;
+      if (action === 'sendReminder') handleSendReminder(storeName, storeId);
+      else if (action === 'sendReport') handleSendReport(storeName, storeId);
+      else if (action === 'openReport') openSVReport(storeName);
+    });
+  });
+}
+
+function renderStoreCard(s) {
+  const meta = [s.region, s.zone, s.operation].filter(Boolean).join(' · ');
+
+  if (!s.hasData) {
+    // 미입력 매장
+    const lastInfo = s.lastSubmittedMonth
+      ? `마지막 입력: ${s.lastSubmittedMonth}`
+      : '한 번도 입력 이력 없음';
+    return `
+      <div class="store-card ${s.status}">
+        <div class="store-head">
+          <div class="store-head-left">
+            <span class="store-emoji">${statusEmoji(s.status)}</span>
+            <span class="store-name">${escapeHtml(s.name)}</span>
+            <span class="store-id">${s.id ? '#' + escapeHtml(s.id) : ''}</span>
+          </div>
+          <span class="store-badge ${s.status}">미입력</span>
+        </div>
+        <div class="store-meta">${escapeHtml(meta || '정보 없음')}</div>
+        <div class="store-missing-info">📅 이번 달 회계일보가 아직 도착하지 않았어요.<br>${escapeHtml(lastInfo)}</div>
+        <div class="store-actions">
+          <button class="btn btn-alert" data-action="sendReminder" data-store="${escapeHtml(s.name)}" data-id="${escapeHtml(s.id)}">
+            📱 입력 독려 알림 보내기
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 입력 완료 매장
+  const issuesHtml = s.issues && s.issues.length > 0
+    ? `<div class="store-issues">${s.issues.map(i => `<div class="issue">${escapeHtml(i)}</div>`).join('')}</div>`
+    : '';
+
+  return `
+    <div class="store-card ${s.status}">
+      <div class="store-head">
+        <div class="store-head-left">
+          <span class="store-emoji">${statusEmoji(s.status)}</span>
+          <span class="store-name">${escapeHtml(s.name)}</span>
+          <span class="store-id">${s.id ? '#' + escapeHtml(s.id) : ''}</span>
+        </div>
+        <span class="store-badge ${s.status}">${statusBadge(s.status).replace(/^[🟢🟡🔴⚪]\s/, '')}</span>
+      </div>
+      <div class="store-meta">${escapeHtml(meta)}</div>
+
+      <div class="store-kpi">
+        <div class="store-kpi-cell">
+          <div class="store-kpi-label">월 매출</div>
+          <div class="store-kpi-value">${wonM(s.revenue)}원</div>
+          <div class="store-kpi-sub">${won(s.revenue)}</div>
+        </div>
+        <div class="store-kpi-cell">
+          <div class="store-kpi-label">영업이익률</div>
+          <div class="store-kpi-value">${pct(s.operatingRatio)}</div>
+          ${deltaSpan(s.vsAvgOpRatio)}
+        </div>
+        <div class="store-kpi-cell">
+          <div class="store-kpi-label">영업이익</div>
+          <div class="store-kpi-value">${wonM(s.operatingProfit)}원</div>
+        </div>
+        <div class="store-kpi-cell">
+          <div class="store-kpi-label">순이익률</div>
+          <div class="store-kpi-value">${pct(s.netRatio)}</div>
+          ${deltaSpan(s.vsAvgNetRatio)}
+        </div>
+      </div>
+
+      ${issuesHtml}
+
+      <div class="store-actions">
+        <button class="btn btn-secondary" data-action="openReport" data-store="${escapeHtml(s.name)}">
+          📊 SV 리포트
+        </button>
+        <button class="btn btn-primary" data-action="sendReport" data-store="${escapeHtml(s.name)}" data-id="${escapeHtml(s.id)}">
+          📱 점주 발송
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 액션 핸들러
+// ═══════════════════════════════════════════════════════════
+function openSVReport(storeName) {
+  const month = DATA.month;
+  const url = `${REPORT_BASE}/sv-report.html?store=${encodeURIComponent(storeName)}&month=${encodeURIComponent(month)}`;
+  window.open(url, '_blank');
+}
+
+function handleSendReminder(storeName, storeId) {
+  openModal({
+    icon: '📱',
+    title: '입력 독려 알림 보내기',
+    msg: `<strong>${escapeHtml(storeName)}</strong> 매장 점주에게<br>
+          비용 입력 독려 알림톡을 보낼까요?<br><br>
+          <span style="color:var(--text-light);font-size:11px;">건당 ~10원의 알림톡 비용이 발생해요.</span>`,
+    confirm: '독려 보내기',
+    confirmClass: 'btn-alert',
+    onConfirm: async () => {
+      try {
+        showToast(`${storeName} 알림톡 발송 중…`);
+        const result = await callAction('sendReminder', storeName, DATA.month);
+        showToast(`✅ ${storeName} 독려 알림 발송 완료`, 'success');
+      } catch (err) {
+        showToast(`❌ ${err.message || '발송 실패'}`, 'error');
+      }
+    },
+  });
+}
+
+function handleSendReport(storeName, storeId) {
+  openModal({
+    icon: '📊',
+    title: '점주 리포트 발송',
+    msg: `<strong>${escapeHtml(storeName)}</strong> 매장 점주에게<br>
+          이번 달 리포트 알림톡을 보낼까요?<br><br>
+          <span style="color:var(--text-light);font-size:11px;">점주는 본인 토큰이 포함된 가맹점 리포트 URL을 받아요.</span>`,
+    confirm: '리포트 발송',
+    confirmClass: 'btn-primary',
+    onConfirm: async () => {
+      try {
+        showToast(`${storeName} 리포트 발송 중…`);
+        const result = await callAction('sendReport', storeName, DATA.month);
+        showToast(`✅ ${storeName} 점주 리포트 발송 완료`, 'success');
+      } catch (err) {
+        showToast(`❌ ${err.message || '발송 실패'}`, 'error');
+      }
+    },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// 메인
+// ═══════════════════════════════════════════════════════════
+function render(data) {
+  DATA = data;
+  $('loader').style.display = 'none';
+  $('content').style.display = 'block';
+  renderHeader(data);
+  renderKPI(data);
+  renderSummary(data);
+  renderFilterTabs(data);
+  renderStoreList(data);
+}
+
+(async function main() {
+  const { sv, month } = getParams();
+  if (!sv || !month) {
+    showError('SV 정보가 부족해요', 'URL에 sv와 month 파라미터가 필요해요.\n예: ?sv=전민석&month=2026-05');
+    return;
+  }
+  try {
+    const data = await fetchDashboard(sv, month);
+    if (!data.stores || data.stores.length === 0) {
+      showError('담당 매장이 없어요', `${sv} SV의 ${month} 기준 담당 매장을 찾지 못했어요.\nSV 이름이 정확한지 확인해 주세요.`);
+      return;
+    }
+    render(data);
+  } catch (err) {
+    showError('대시보드를 불러올 수 없어요', err.message || '잠시 후 다시 시도해 주세요.');
+  }
+})();
+</script>
+</body>
+</html>
