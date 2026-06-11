@@ -86,6 +86,22 @@
   }
   .hero-title { font-size: 28px; font-weight: 800; margin: 0 0 4px; }
   .hero-sub { font-size: 14px; opacity: 0.85; }
+  .month-selector {
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s;
+  }
+  .month-selector:hover { background: rgba(255,255,255,0.22); }
+  .month-selector option { color: var(--text); background: white; }
 
   /* ─── 요약 + KPI 한 줄 ─── */
   .summary-bar {
@@ -410,6 +426,7 @@
       <span class="hero-tag">SV DASHBOARD · INTERNAL</span>
       <h1 class="hero-title" id="heroTitle">SV 대시보드</h1>
       <div class="hero-sub" id="heroSub">담당 매장 운영 현황</div>
+      <select id="monthSelector" class="month-selector"></select>
     </div>
 
     <div class="summary-bar" id="summaryBar"></div>
@@ -482,11 +499,33 @@ const wonM = (n) => {
 const pct = (n) => (n === null || n === undefined ? '-' : Math.round(n * 10) / 10 + '%');
 const escapeHtml = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// 한 달 전 'YYYY-MM' 반환 (KST 기준)
+function defaultMonth() {
+  const now = new Date();
+  let y = now.getFullYear();
+  let m = now.getMonth(); // 0~11 → 이번 달 - 1 = 1-indexed 지난달
+  if (m === 0) { y -= 1; m = 12; }
+  return `${y}-${String(m).padStart(2, '0')}`;
+}
+
+// 최근 24개월 옵션 (지난달부터 과거로)
+function generateMonthOptions() {
+  const opts = [];
+  const now = new Date();
+  for (let i = 1; i <= 24; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    opts.push(`${y}-${m}`);
+  }
+  return opts;
+}
+
 function getParams() {
   const p = new URLSearchParams(location.search);
   return {
     sv: p.get('sv') || '',
-    month: p.get('month') || '',
+    month: p.get('month') || defaultMonth(),  // month 생략 시 자동으로 지난달
   };
 }
 
@@ -716,6 +755,30 @@ let CURRENT_SV = 'all';  // 전체 모드에서 SV 필터
 
 function isAllMode(sv) {
   return String(sv || '').toUpperCase() === 'ALL' || sv === '전체' || !sv;
+}
+
+function monthLabel(ym) {
+  const [y, m] = (ym || '').split('-');
+  if (!y || !m) return ym || '';
+  return `${y}년 ${parseInt(m, 10)}월`;
+}
+
+function renderMonthSelector(currentMonth) {
+  const sel = $('monthSelector');
+  const months = generateMonthOptions();
+  // 현재 선택된 월이 자동 생성 옵션에 없으면 맨 앞에 추가
+  if (currentMonth && months.indexOf(currentMonth) < 0) {
+    months.unshift(currentMonth);
+  }
+  sel.innerHTML = months.map(m => {
+    const selected = m === currentMonth ? 'selected' : '';
+    return `<option value="${m}" ${selected}>📅 ${monthLabel(m)}</option>`;
+  }).join('');
+  sel.onchange = () => {
+    const url = new URL(location.href);
+    url.searchParams.set('month', sel.value);
+    location.href = url.toString();
+  };
 }
 
 function renderHeader(data) {
@@ -1010,6 +1073,7 @@ function render(data) {
   $('loader').style.display = 'none';
   $('content').style.display = 'block';
   renderHeader(data);
+  renderMonthSelector(data.month);
   renderSummaryBar(data);
   renderBulkBtn(data);
   renderSvFilter(data);
