@@ -416,6 +416,9 @@
 
     <div class="toolbar">
       <input type="text" id="searchInput" class="search-input" placeholder="🔍 매장명 검색...">
+      <select id="svFilter" class="search-input" style="display:none; max-width:160px; margin-left:8px;">
+        <option value="all">전체 SV</option>
+      </select>
       <div class="toolbar-info" id="toolbarInfo">전체 0개 매장 표시중</div>
       <button id="bulkReminderBtn" class="btn-toolbar" style="display:none;">📱 미입력 매장 일괄 발송</button>
     </div>
@@ -425,6 +428,7 @@
         <tr>
           <th class="center" style="width:36px;">상태</th>
           <th>매장</th>
+          <th id="thSv" class="center" style="width:80px; display:none;">담당 SV</th>
           <th class="num">매출</th>
           <th class="num">영업이익률</th>
           <th class="num">순이익률</th>
@@ -708,12 +712,24 @@ function handleBulkReminder() {
 let DATA = null;
 let CURRENT_FILTER = 'all';
 let CURRENT_SEARCH = '';
+let CURRENT_SV = 'all';  // 전체 모드에서 SV 필터
+
+function isAllMode(sv) {
+  return String(sv || '').toUpperCase() === 'ALL' || sv === '전체' || !sv;
+}
 
 function renderHeader(data) {
   const [year, m] = (data.month || '').split('-');
   const monthLabel = year && m ? `${year}년 ${parseInt(m, 10)}월` : data.month;
-  $('heroTitle').textContent = `${data.sv} SV`;
-  $('heroSub').textContent = `${monthLabel} · 담당 매장 ${data.summary.totalStores}개`;
+  if (isAllMode(data.sv)) {
+    $('heroTitle').textContent = '전체 매장 대시보드';
+    $('heroSub').textContent = `${monthLabel} · 전 매장 ${data.summary.totalStores}개`;
+    document.querySelector('.hero-tag').textContent = 'ALL STORES · HQ DASHBOARD';
+  } else {
+    $('heroTitle').textContent = `${data.sv} SV`;
+    $('heroSub').textContent = `${monthLabel} · 담당 매장 ${data.summary.totalStores}개`;
+    document.querySelector('.hero-tag').textContent = 'SV DASHBOARD · INTERNAL';
+  }
 }
 
 function renderBulkBtn(data) {
@@ -778,11 +794,42 @@ function filteredStores(data) {
   if (CURRENT_FILTER !== 'all') {
     stores = stores.filter(s => s.status === CURRENT_FILTER);
   }
+  if (isAllMode(data.sv) && CURRENT_SV !== 'all') {
+    stores = stores.filter(s => s.sv === CURRENT_SV);
+  }
   if (CURRENT_SEARCH) {
     const q = CURRENT_SEARCH.toLowerCase();
     stores = stores.filter(s => s.name.toLowerCase().includes(q) || (s.id && String(s.id).includes(q)));
   }
   return stores;
+}
+
+function renderSvFilter(data) {
+  const sel = $('svFilter');
+  const thSv = $('thSv');
+  if (!isAllMode(data.sv)) {
+    sel.style.display = 'none';
+    thSv.style.display = 'none';
+    return;
+  }
+  sel.style.display = '';
+  thSv.style.display = '';
+  // 매장에서 SV 목록 추출 + 카운트
+  const svCount = {};
+  data.stores.forEach(s => {
+    const v = s.sv || '(미지정)';
+    svCount[v] = (svCount[v] || 0) + 1;
+  });
+  const opts = ['<option value="all">전체 SV (' + data.stores.length + ')</option>'];
+  Object.keys(svCount).sort().forEach(sv => {
+    const selected = CURRENT_SV === sv ? 'selected' : '';
+    opts.push(`<option value="${escapeHtml(sv)}" ${selected}>${escapeHtml(sv)} (${svCount[sv]})</option>`);
+  });
+  sel.innerHTML = opts.join('');
+  sel.onchange = () => {
+    CURRENT_SV = sel.value;
+    renderStoreList(data);
+  };
 }
 
 function statusIcon(status) {
@@ -811,6 +858,9 @@ function renderStoreList(data) {
 }
 
 function renderStoreRow(s, idx) {
+  const showSv = isAllMode(DATA.sv);
+  const svCell = showSv ? `<td class="center" style="font-size:12px; font-weight:700; color:var(--sv);">${escapeHtml(s.sv || '-')}</td>` : '';
+
   if (!s.hasData) {
     // 미입력 매장
     const lastInfo = s.lastSubmittedMonth ? `마지막 입력 ${s.lastSubmittedMonth}` : '입력 이력 없음';
@@ -828,6 +878,7 @@ function renderStoreRow(s, idx) {
           </div>
           <div class="st-meta">${escapeHtml([s.region, s.zone].filter(Boolean).join(' · ') || '-')}</div>
         </td>
+        ${svCell}
         <td class="num" style="color:var(--bad); font-weight:700;">미입력</td>
         <td class="num" style="color:var(--text-light);">-</td>
         <td class="num" style="color:var(--text-light);">-</td>
@@ -882,6 +933,7 @@ function renderStoreRow(s, idx) {
         </div>
         <div class="st-meta">${escapeHtml([s.region, s.zone].filter(Boolean).join(' · ') || '-')}</div>
       </td>
+      ${svCell}
       <td class="num"><div class="st-revenue">${wonM(s.revenue)}원</div></td>
       <td class="num">
         <div class="st-ratio">${pct(s.operatingRatio)}</div>
@@ -957,19 +1009,25 @@ function render(data) {
   renderHeader(data);
   renderSummaryBar(data);
   renderBulkBtn(data);
+  renderSvFilter(data);
   renderStoreList(data);
 }
 
 (async function main() {
   const { sv, month } = getParams();
-  if (!sv || !month) {
-    showError('SV 정보가 부족해요', 'URL에 sv와 month 파라미터가 필요해요.\n예: ?sv=전민석&month=2026-05');
+  if (!month) {
+    showError('월 정보가 부족해요', 'URL에 month 파라미터가 필요해요.\n예: ?sv=전민석&month=2026-05\n또는 ?sv=ALL&month=2026-05 (전체 매장)');
     return;
   }
+  // sv 생략 시 전체 모드
+  const targetSv = sv || 'ALL';
   try {
-    const data = await fetchDashboard(sv, month);
+    const data = await fetchDashboard(targetSv, month);
     if (!data.stores || data.stores.length === 0) {
-      showError('담당 매장이 없어요', `${sv} SV의 ${month} 기준 담당 매장을 찾지 못했어요.\nSV 이름이 정확한지 확인해 주세요.`);
+      const msg = isAllMode(targetSv)
+        ? `${month} 기준 매장 데이터를 찾지 못했어요.`
+        : `${targetSv} SV의 ${month} 기준 담당 매장을 찾지 못했어요.\nSV 이름이 정확한지 확인해 주세요.`;
+      showError('매장을 찾지 못했어요', msg);
       return;
     }
     render(data);
