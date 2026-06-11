@@ -31,7 +31,6 @@
     --warn-bg: #FFFBEB;
     --bad: #EF4444;
     --bad-bg: #FEF2F2;
-    --alert: #DC2626;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -65,7 +64,7 @@
   /* ─── 헤더 ─── */
   .hero {
     background: linear-gradient(135deg, var(--sv) 0%, var(--sv-dark) 100%);
-    color: white; padding: 24px 20px 20px;
+    color: white; padding: 22px 20px 18px;
     position: relative; overflow: hidden;
   }
   .hero::before {
@@ -78,60 +77,49 @@
     background: rgba(255,255,255,0.18); color: white;
     font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
     padding: 4px 8px; border-radius: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .hero-title { font-size: 22px; font-weight: 800; margin: 0 0 4px; }
   .hero-sub { font-size: 13px; opacity: 0.85; }
-  .hero-meta { font-size: 11px; opacity: 0.7; margin-top: 6px; }
 
   /* ─── KPI 4분할 ─── */
   .kpi-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 1px; background: var(--border-light);
-    margin: 0;
   }
   .kpi-cell {
-    background: var(--bg); padding: 14px 16px;
+    background: var(--bg); padding: 12px 8px;
     text-align: center;
   }
-  .kpi-label {
-    font-size: 11px; color: var(--text-sub); font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .kpi-value {
-    font-size: 20px; font-weight: 800; color: var(--text);
-    letter-spacing: -0.02em;
-  }
+  .kpi-label { font-size: 10px; color: var(--text-sub); font-weight: 600; margin-bottom: 2px; }
+  .kpi-value { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .kpi-value.sv { color: var(--sv); }
   .kpi-value.good { color: var(--good); }
   .kpi-value.warn { color: var(--warn); }
   .kpi-value.bad { color: var(--bad); }
-  .kpi-value.sv { color: var(--sv); }
-  .kpi-sub {
-    font-size: 10px; color: var(--text-light);
-    margin-top: 2px;
-  }
 
   /* ─── 매출/이익 요약 ─── */
   .summary-card {
     margin: 12px;
     background: var(--bg-soft);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: 10px;
+    padding: 12px 14px;
     border: 1px solid var(--border-light);
   }
   .summary-row {
     display: flex; justify-content: space-between; align-items: baseline;
-    padding: 6px 0;
-    font-size: 13px;
+    padding: 5px 0;
+    font-size: 12px;
   }
   .summary-row + .summary-row { border-top: 1px dashed var(--border); }
   .summary-label { color: var(--text-sub); }
   .summary-value { font-weight: 700; color: var(--text); }
+  .summary-value .bench { color: var(--text-light); font-size: 10px; font-weight: 500; margin-left: 4px; }
 
   /* ─── 필터 탭 ─── */
   .filter-tabs {
     display: flex; gap: 6px;
-    padding: 8px 12px;
+    padding: 10px 12px;
     overflow-x: auto;
     background: var(--bg);
     border-top: 1px solid var(--border-light);
@@ -141,7 +129,7 @@
   .filter-tab {
     flex-shrink: 0;
     padding: 6px 12px;
-    border-radius: 16px;
+    border-radius: 14px;
     background: var(--bg-section);
     color: var(--text-sub);
     font-size: 12px; font-weight: 600;
@@ -149,127 +137,76 @@
     border: none;
     white-space: nowrap;
   }
-  .filter-tab.active {
-    background: var(--sv);
-    color: white;
-  }
+  .filter-tab.active { background: var(--sv); color: white; }
   .filter-tab.warn.active { background: var(--warn); }
   .filter-tab.bad.active { background: var(--bad); }
   .filter-tab.good.active { background: var(--good); }
 
-  /* ─── 매장 카드 ─── */
-  .store-list { padding: 8px 12px 20px; }
-  .store-card {
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 16px;
-    margin-bottom: 10px;
+  /* ─── 매장 압축 행 (NEW) ─── */
+  .store-table {
+    background: var(--bg);
+    padding: 0;
   }
-  .store-card.good { border-left: 4px solid var(--good); }
-  .store-card.warning { border-left: 4px solid var(--warn); background: var(--warn-bg); }
-  .store-card.missing { border-left: 4px solid var(--bad); background: var(--bad-bg); }
-  .store-card.normal { border-left: 4px solid var(--text-light); }
-
-  .store-head {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 4px;
-  }
-  .store-head-left { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
-  .store-emoji { font-size: 16px; }
-  .store-name { font-size: 15px; font-weight: 800; color: var(--text); }
-  .store-id { font-size: 11px; color: var(--text-light); }
-  .store-badge {
-    flex-shrink: 0;
-    padding: 3px 8px; border-radius: 10px;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.02em;
-  }
-  .store-badge.good { background: var(--good); color: white; }
-  .store-badge.warning { background: var(--warn); color: white; }
-  .store-badge.missing { background: var(--bad); color: white; }
-  .store-badge.normal { background: var(--text-light); color: white; }
-
-  .store-meta {
-    font-size: 11px; color: var(--text-sub);
-    margin-bottom: 10px;
-  }
-  .store-meta .dot { color: var(--text-faint); margin: 0 4px; }
-
-  .store-kpi {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px; margin-bottom: 10px;
-  }
-  .store-kpi-cell {
-    background: white; border: 1px solid var(--border-light);
-    border-radius: 8px; padding: 8px 10px;
-  }
-  .store-card.warning .store-kpi-cell,
-  .store-card.missing .store-kpi-cell {
-    background: rgba(255,255,255,0.7);
-  }
-  .store-kpi-label {
-    font-size: 10px; color: var(--text-sub); font-weight: 600;
-    margin-bottom: 2px;
-  }
-  .store-kpi-value {
-    font-size: 14px; font-weight: 800; color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .store-kpi-sub {
-    font-size: 10px; color: var(--text-light); margin-top: 1px;
-  }
-  .store-kpi-sub.up { color: var(--good); }
-  .store-kpi-sub.down { color: var(--bad); }
-
-  .store-issues {
-    background: rgba(255,255,255,0.6);
-    border-radius: 6px;
-    padding: 6px 8px;
-    font-size: 11px; color: var(--text-sub);
-    line-height: 1.5;
-    margin-bottom: 10px;
-  }
-  .store-issues .issue {
-    display: flex; gap: 4px;
-  }
-  .store-issues .issue::before {
-    content: '⚠'; color: var(--warn);
-  }
-
-  .store-missing-info {
-    font-size: 12px; color: var(--text-sub);
-    margin-bottom: 10px;
-  }
-
-  /* ─── 버튼 ─── */
-  .store-actions {
-    display: flex; gap: 6px;
-  }
-  .btn {
-    flex: 1;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: none;
-    font-size: 12px; font-weight: 700;
+  .store-row {
+    display: flex;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
     cursor: pointer;
-    text-align: center;
-    text-decoration: none;
+    transition: background 0.1s;
+    align-items: center;
+  }
+  .store-row:active { background: var(--bg-section); }
+  .store-row.missing { background: var(--bad-bg); }
+  .store-row.warning { background: var(--warn-bg); }
+  .store-row-status {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    gap: 4px;
-    transition: opacity 0.15s;
+    font-size: 12px;
+    margin-right: 10px;
   }
-  .btn:active { opacity: 0.7; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-primary {
-    background: var(--sv); color: white;
+  .store-row-status.good { background: var(--good); color: white; }
+  .store-row-status.warning { background: var(--warn); color: white; }
+  .store-row-status.missing { background: var(--bad); color: white; }
+  .store-row-status.normal { background: var(--text-light); color: white; }
+
+  .store-row-main { flex: 1; min-width: 0; }
+  .store-row-top {
+    display: flex; align-items: baseline; gap: 6px;
+    margin-bottom: 3px;
   }
-  .btn-secondary {
-    background: white; color: var(--sv);
-    border: 1px solid var(--sv);
+  .store-row-name {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 160px;
   }
-  .btn-alert {
-    background: var(--bad); color: white;
+  .store-row-id { font-size: 10px; color: var(--text-light); flex-shrink: 0; }
+  .store-row-op {
+    font-size: 10px; color: var(--text-sub);
+    background: var(--bg-section);
+    padding: 1px 6px; border-radius: 8px;
+    flex-shrink: 0;
   }
-  .btn-success {
-    background: var(--good); color: white;
+  .store-row-stats {
+    display: flex; gap: 8px;
+    font-size: 11px; color: var(--text-sub);
+    flex-wrap: wrap;
+  }
+  .store-row-stats .stat-revenue { font-weight: 700; color: var(--text); }
+  .store-row-stats .stat-op { font-weight: 600; }
+  .store-row-stats .delta { font-size: 10px; }
+  .store-row-stats .delta.up { color: var(--good); }
+  .store-row-stats .delta.down { color: var(--bad); }
+  .store-row-stats .missing-text {
+    color: var(--bad); font-weight: 600;
+  }
+
+  .store-row-arrow {
+    flex-shrink: 0;
+    color: var(--text-faint);
+    font-size: 18px;
+    margin-left: 8px;
   }
 
   /* ─── 푸터 ─── */
@@ -280,29 +217,181 @@
     font-size: 10px;
     line-height: 1.6;
     border-top: 1px solid var(--border-light);
-    margin-top: 16px;
+    margin-top: 12px;
   }
   .footer-brand { font-weight: 700; color: var(--text-sub); margin-bottom: 4px; }
 
-  /* ─── 모달 ─── */
-  .modal-overlay {
+  /* ─── 상세 모달 (매장 클릭 시) ─── */
+  .detail-overlay {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center;
     z-index: 100;
+    display: flex; align-items: flex-end;
+    animation: fade-in 0.18s ease-out;
+  }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .detail-sheet {
+    background: white;
+    width: 100%; max-width: 520px;
+    margin: 0 auto;
+    border-radius: 16px 16px 0 0;
+    max-height: 88vh;
+    overflow-y: auto;
+    animation: slide-up 0.22s ease-out;
+  }
+  .detail-handle {
+    width: 36px; height: 4px; background: var(--border);
+    border-radius: 2px; margin: 8px auto 4px;
+  }
+  .detail-header {
+    padding: 8px 20px 14px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .detail-status-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .detail-badge {
+    padding: 3px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700;
+  }
+  .detail-badge.good { background: var(--good); color: white; }
+  .detail-badge.warning { background: var(--warn); color: white; }
+  .detail-badge.missing { background: var(--bad); color: white; }
+  .detail-badge.normal { background: var(--text-light); color: white; }
+  .detail-title { font-size: 18px; font-weight: 800; margin: 0; }
+  .detail-id { color: var(--text-light); font-size: 13px; font-weight: 600; }
+  .detail-meta {
+    font-size: 12px; color: var(--text-sub);
+    margin-top: 4px;
+  }
+
+  .detail-body { padding: 16px 20px; }
+
+  .detail-kpi-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .detail-kpi-cell {
+    background: var(--bg-soft);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .detail-kpi-label {
+    font-size: 11px; color: var(--text-sub); font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .detail-kpi-value {
+    font-size: 17px; font-weight: 800; color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .detail-kpi-sub {
+    font-size: 11px; color: var(--text-light); margin-top: 2px;
+  }
+  .detail-kpi-sub.up { color: var(--good); }
+  .detail-kpi-sub.down { color: var(--bad); }
+
+  .detail-cost-grid {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .detail-cost-row {
+    display: flex; justify-content: space-between;
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  .detail-cost-row + .detail-cost-row { border-top: 1px dashed var(--border); }
+  .detail-cost-label { color: var(--text-sub); }
+  .detail-cost-value { font-weight: 700; }
+  .detail-cost-value.warn { color: var(--warn); }
+
+  .detail-issues {
+    background: var(--warn-bg);
+    border: 1px solid #FCD34D;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px; color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .detail-issues-title { font-weight: 700; margin-bottom: 4px; color: var(--warn); }
+  .detail-issues .issue {
+    display: flex; gap: 4px; align-items: flex-start;
+  }
+  .detail-issues .issue::before { content: '⚠'; flex-shrink: 0; }
+
+  .detail-missing-info {
+    background: var(--bad-bg);
+    border: 1px solid #FCA5A5;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px; color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .detail-missing-info .lab {
+    font-weight: 700; margin-bottom: 4px;
+  }
+
+  /* ─── 버튼 ─── */
+  .detail-actions {
+    display: flex; gap: 8px;
+    padding: 0 20px 20px;
+  }
+  .btn {
+    flex: 1;
+    padding: 12px 10px;
+    border-radius: 10px;
+    border: none;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px;
+    transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn:disabled, .btn.disabled {
+    background: var(--bg-section) !important;
+    color: var(--text-faint) !important;
+    border: 1px solid var(--border) !important;
+    cursor: not-allowed;
+    opacity: 1;
+  }
+  .btn-primary { background: var(--sv); color: white; }
+  .btn-secondary { background: white; color: var(--sv); border: 1px solid var(--sv); }
+  .btn-alert { background: var(--bad); color: white; }
+  .btn-success { background: var(--good); color: white; }
+  .btn-ghost {
+    background: white; color: var(--text-sub);
+    border: 1px solid var(--border);
+  }
+
+  /* ─── 확인 모달 (발송 직전) ─── */
+  .confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
     padding: 20px;
   }
-  .modal {
+  .confirm-box {
     background: white; border-radius: 16px;
     padding: 24px; max-width: 360px; width: 100%;
     text-align: center;
   }
-  .modal-icon { font-size: 36px; margin-bottom: 8px; }
-  .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
-  .modal-msg { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 18px; }
-  .modal-msg strong { color: var(--text); }
-  .modal-actions { display: flex; gap: 8px; }
-  .modal-actions .btn { padding: 10px; font-size: 13px; }
+  .confirm-icon { font-size: 36px; margin-bottom: 8px; }
+  .confirm-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .confirm-msg { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 18px; }
+  .confirm-msg strong { color: var(--text); }
+  .confirm-actions { display: flex; gap: 8px; }
+  .confirm-actions .btn { padding: 10px; font-size: 13px; }
 
   /* ─── 토스트 ─── */
   .toast {
@@ -311,7 +400,7 @@
     background: var(--text); color: white;
     padding: 10px 16px; border-radius: 8px;
     font-size: 13px; font-weight: 600;
-    z-index: 200;
+    z-index: 300;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     animation: toast-in 0.2s ease-out;
   }
@@ -346,7 +435,6 @@
       <span class="hero-tag">SV DASHBOARD · INTERNAL</span>
       <h1 class="hero-title" id="heroTitle">SV 대시보드</h1>
       <div class="hero-sub" id="heroSub">담당 매장 운영 현황</div>
-      <div class="hero-meta" id="heroMeta"></div>
     </div>
 
     <div class="kpi-grid">
@@ -357,7 +445,6 @@
       <div class="kpi-cell">
         <div class="kpi-label">입력 완료</div>
         <div class="kpi-value good" id="kpiSubmitted">-</div>
-        <div class="kpi-sub" id="kpiSubmittedSub"></div>
       </div>
       <div class="kpi-cell">
         <div class="kpi-label">검토 필요</div>
@@ -371,7 +458,7 @@
 
     <div class="summary-card">
       <div class="summary-row">
-        <span class="summary-label">총 매출 (입력 매장)</span>
+        <span class="summary-label">총 매출</span>
         <span class="summary-value" id="sumRevenue">-</span>
       </div>
       <div class="summary-row">
@@ -384,31 +471,48 @@
       </div>
       <div class="summary-row">
         <span class="summary-label">평균 영업이익률</span>
-        <span class="summary-value"><span id="sumAvgOpRatio">-</span> <span style="color:var(--text-light);font-size:11px;">(동종 평균 <span id="benchOp">-</span>)</span></span>
+        <span class="summary-value"><span id="sumAvgOpRatio">-</span><span class="bench">(동종 평균 <span id="benchOp">-</span>)</span></span>
       </div>
     </div>
 
     <div class="filter-tabs" id="filterTabs"></div>
 
-    <div class="store-list" id="storeList"></div>
+    <div class="store-table" id="storeList"></div>
 
     <div class="footer">
       <div class="footer-brand">POKE ALL DAY · SV INTERNAL</div>
       <div>본 대시보드는 본사 내부 운영 자료입니다.<br>
-      매월 매장 데이터 입력 후 SV가 검토 → 점주에게 리포트 발송.</div>
+      매장 행을 누르면 상세 정보와 발송 버튼이 열려요.</div>
     </div>
   </div>
 </div>
 
-<!-- 모달 (확인용) -->
-<div id="modal" class="modal-overlay" style="display:none;">
-  <div class="modal">
-    <div class="modal-icon" id="modalIcon">📱</div>
-    <div class="modal-title" id="modalTitle">알림톡 발송</div>
-    <div class="modal-msg" id="modalMsg"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">취소</button>
-      <button class="btn btn-primary" id="modalConfirm">발송</button>
+<!-- 상세 모달 (매장 클릭 시 슬라이드업) -->
+<div id="detail" class="detail-overlay" style="display:none;" onclick="closeDetailIfOverlay(event)">
+  <div class="detail-sheet">
+    <div class="detail-handle"></div>
+    <div class="detail-header">
+      <div class="detail-status-row">
+        <span class="detail-badge" id="detailBadge">-</span>
+        <span class="detail-id" id="detailId">-</span>
+      </div>
+      <h2 class="detail-title" id="detailTitle">-</h2>
+      <div class="detail-meta" id="detailMeta">-</div>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="detail-actions" id="detailActions"></div>
+  </div>
+</div>
+
+<!-- 확인 모달 (발송 직전) -->
+<div id="confirm" class="confirm-overlay" style="display:none;">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">📱</div>
+    <div class="confirm-title" id="confirmTitle">알림톡 발송</div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">취소</button>
+      <button class="btn btn-primary" id="confirmBtn">발송</button>
     </div>
   </div>
 </div>
@@ -477,32 +581,203 @@ function showToast(msg, type) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 모달
+// 확인 모달
 // ═══════════════════════════════════════════════════════════
-let modalAction = null;
+let confirmAction = null;
 
-function openModal(opts) {
-  $('modalIcon').textContent = opts.icon || '📱';
-  $('modalTitle').textContent = opts.title || '확인';
-  $('modalMsg').innerHTML = opts.msg || '';
-  $('modalConfirm').textContent = opts.confirm || '발송';
-  $('modalConfirm').className = 'btn ' + (opts.confirmClass || 'btn-primary');
-  modalAction = opts.onConfirm;
-  $('modal').style.display = 'flex';
+function openConfirm(opts) {
+  $('confirmIcon').textContent = opts.icon || '📱';
+  $('confirmTitle').textContent = opts.title || '확인';
+  $('confirmMsg').innerHTML = opts.msg || '';
+  $('confirmBtn').textContent = opts.confirm || '발송';
+  $('confirmBtn').className = 'btn ' + (opts.confirmClass || 'btn-primary');
+  confirmAction = opts.onConfirm;
+  $('confirm').style.display = 'flex';
 }
 
-function closeModal() {
-  $('modal').style.display = 'none';
-  modalAction = null;
+function closeConfirm() {
+  $('confirm').style.display = 'none';
+  confirmAction = null;
 }
 
-$('modalConfirm').addEventListener('click', async () => {
-  if (modalAction) {
-    const cb = modalAction;
-    closeModal();
+$('confirmBtn').addEventListener('click', async () => {
+  if (confirmAction) {
+    const cb = confirmAction;
+    closeConfirm();
     await cb();
   }
 });
+
+// ═══════════════════════════════════════════════════════════
+// 상세 모달
+// ═══════════════════════════════════════════════════════════
+function openDetail(store) {
+  const badgeMap = {
+    good: '🟢 우수', warning: '🟡 검토', missing: '🔴 미입력', normal: '⚪ 보통',
+  };
+  $('detailBadge').textContent = badgeMap[store.status] || badgeMap.normal;
+  $('detailBadge').className = 'detail-badge ' + store.status;
+  $('detailId').textContent = store.id ? '#' + store.id : '';
+  $('detailTitle').textContent = store.name;
+  const metaParts = [store.region, store.zone, store.operation].filter(Boolean);
+  $('detailMeta').textContent = metaParts.join(' · ') || '정보 없음';
+
+  if (!store.hasData) {
+    renderDetailMissing(store);
+  } else {
+    renderDetailFull(store);
+  }
+  $('detail').style.display = 'flex';
+}
+
+function closeDetail() {
+  $('detail').style.display = 'none';
+}
+
+function closeDetailIfOverlay(e) {
+  if (e.target.id === 'detail') closeDetail();
+}
+
+function deltaTxt(v) {
+  if (v === null || v === undefined || isNaN(v)) return '';
+  const sign = v >= 0 ? '+' : '';
+  const cls = v >= 0 ? 'up' : 'down';
+  return `<div class="detail-kpi-sub ${cls}">${sign}${v}%p vs 동종 평균</div>`;
+}
+
+function renderDetailFull(s) {
+  const issuesHtml = s.issues && s.issues.length > 0
+    ? `<div class="detail-issues">
+         <div class="detail-issues-title">검토 항목</div>
+         ${s.issues.map(i => `<div class="issue">${escapeHtml(i)}</div>`).join('')}
+       </div>`
+    : '';
+
+  $('detailBody').innerHTML = `
+    <div class="detail-kpi-grid">
+      <div class="detail-kpi-cell">
+        <div class="detail-kpi-label">월 매출</div>
+        <div class="detail-kpi-value">${won(s.revenue)}</div>
+      </div>
+      <div class="detail-kpi-cell">
+        <div class="detail-kpi-label">영업이익률</div>
+        <div class="detail-kpi-value">${pct(s.operatingRatio)}</div>
+        ${deltaTxt(s.vsAvgOpRatio)}
+      </div>
+      <div class="detail-kpi-cell">
+        <div class="detail-kpi-label">영업이익</div>
+        <div class="detail-kpi-value">${won(s.operatingProfit)}</div>
+      </div>
+      <div class="detail-kpi-cell">
+        <div class="detail-kpi-label">순이익률</div>
+        <div class="detail-kpi-value">${pct(s.netRatio)}</div>
+        ${deltaTxt(s.vsAvgNetRatio)}
+      </div>
+    </div>
+
+    <div class="detail-cost-grid">
+      <div class="detail-cost-row">
+        <span class="detail-cost-label">매출원가율</span>
+        <span class="detail-cost-value ${s.foodCostRatio > 45 ? 'warn' : ''}">${pct(s.foodCostRatio)}</span>
+      </div>
+      <div class="detail-cost-row">
+        <span class="detail-cost-label">임대료율</span>
+        <span class="detail-cost-value ${s.rentRatio > 15 ? 'warn' : ''}">${pct(s.rentRatio)}</span>
+      </div>
+      <div class="detail-cost-row">
+        <span class="detail-cost-label">인건비율 (직원만)</span>
+        <span class="detail-cost-value ${s.laborRatio > 30 ? 'warn' : ''}">${pct(s.laborRatio)}</span>
+      </div>
+      <div class="detail-cost-row">
+        <span class="detail-cost-label">배달플랫폼 수수료율</span>
+        <span class="detail-cost-value">${pct(s.deliveryFeeRatio)}</span>
+      </div>
+    </div>
+
+    ${issuesHtml}
+  `;
+
+  $('detailActions').innerHTML = `
+    <button class="btn btn-ghost" onclick="closeDetail()">닫기</button>
+    <button class="btn btn-secondary" onclick="openSVReport('${escapeHtml(s.name).replace(/'/g, '&#39;')}')">📊 SV 리포트</button>
+    <button class="btn btn-primary" id="actSendReport">📱 점주 발송</button>
+  `;
+  $('actSendReport').addEventListener('click', () => handleSendReport(s.name));
+}
+
+function renderDetailMissing(s) {
+  const lastInfo = s.lastSubmittedMonth
+    ? `마지막 입력: <strong>${escapeHtml(s.lastSubmittedMonth)}</strong>`
+    : '한 번도 입력 이력 없음';
+  $('detailBody').innerHTML = `
+    <div class="detail-missing-info">
+      <div class="lab">📅 이번 달 회계일보가 아직 도착하지 않았어요</div>
+      <div>${lastInfo}</div>
+      <div style="margin-top:10px; font-size:11px; color:var(--text-sub);">
+        ※ 입력 완료 후에 SV 리포트 / 점주 리포트 발송이 가능해요.
+      </div>
+    </div>
+  `;
+  $('detailActions').innerHTML = `
+    <button class="btn btn-ghost" onclick="closeDetail()">닫기</button>
+    <button class="btn disabled" disabled title="입력 완료 후 활성화">📊 SV 리포트</button>
+    <button class="btn btn-alert" id="actSendReminder">📱 입력 독려</button>
+  `;
+  $('actSendReminder').addEventListener('click', () => handleSendReminder(s.name));
+}
+
+// ═══════════════════════════════════════════════════════════
+// 액션 핸들러
+// ═══════════════════════════════════════════════════════════
+function openSVReport(storeName) {
+  const month = DATA.month;
+  const url = `${REPORT_BASE}/sv-report.html?store=${encodeURIComponent(storeName)}&month=${encodeURIComponent(month)}`;
+  window.open(url, '_blank');
+}
+
+function handleSendReminder(storeName) {
+  closeDetail();
+  openConfirm({
+    icon: '📱',
+    title: '입력 독려 알림 보내기',
+    msg: `<strong>${escapeHtml(storeName)}</strong> 점주에게<br>
+          비용 입력 독려 알림톡을 보낼까요?<br><br>
+          <span style="color:var(--text-light);font-size:11px;">건당 ~10원의 알림톡 비용이 발생해요.</span>`,
+    confirm: '독려 보내기',
+    confirmClass: 'btn-alert',
+    onConfirm: async () => {
+      try {
+        showToast(`${storeName} 알림톡 발송 중…`);
+        await callAction('sendReminder', storeName, DATA.month);
+        showToast(`✅ ${storeName} 독려 알림 발송 완료`, 'success');
+      } catch (err) {
+        showToast(`❌ ${err.message || '발송 실패'}`, 'error');
+      }
+    },
+  });
+}
+
+function handleSendReport(storeName) {
+  closeDetail();
+  openConfirm({
+    icon: '📊',
+    title: '점주 리포트 발송',
+    msg: `<strong>${escapeHtml(storeName)}</strong> 점주에게<br>
+          이번 달 리포트 알림톡을 보낼까요?<br><br>
+          <span style="color:var(--text-light);font-size:11px;">점주는 본인 토큰이 포함된 가맹점 리포트 URL을 받아요.</span>`,
+    confirm: '리포트 발송',
+    confirmClass: 'btn-primary',
+    onConfirm: async () => {
+      try {
+        showToast(`${storeName} 리포트 발송 중…`);
+        await callAction('sendReport', storeName, DATA.month);
+        showToast(`✅ ${storeName} 점주 리포트 발송 완료`, 'success');
+      } catch (err) {
+        showToast(`❌ ${err.message || '발송 실패'}`, 'error');
+      }
+    },
+  });
+}
 
 // ═══════════════════════════════════════════════════════════
 // 렌더링
@@ -515,16 +790,14 @@ function renderHeader(data) {
   const monthLabel = year && m ? `${year}년 ${parseInt(m, 10)}월` : data.month;
   $('heroTitle').textContent = `${data.sv} SV`;
   $('heroSub').textContent = `${monthLabel} · 담당 매장 ${data.summary.totalStores}개`;
-  $('heroMeta').textContent = `검토 ${data.summary.warningCount} · 우수 ${data.summary.goodCount} · 미입력 ${data.summary.missingCount}`;
 }
 
 function renderKPI(data) {
   const s = data.summary;
-  $('kpiTotal').textContent = s.totalStores + '개';
-  $('kpiSubmitted').textContent = s.submittedCount + '개';
-  $('kpiSubmittedSub').textContent = `${s.submittedCount}/${s.totalStores}`;
-  $('kpiWarning').textContent = s.warningCount + '개';
-  $('kpiMissing').textContent = s.missingCount + '개';
+  $('kpiTotal').textContent = s.totalStores;
+  $('kpiSubmitted').textContent = s.submittedCount;
+  $('kpiWarning').textContent = s.warningCount;
+  $('kpiMissing').textContent = s.missingCount;
 }
 
 function renderSummary(data) {
@@ -559,25 +832,8 @@ function renderFilterTabs(data) {
   });
 }
 
-function statusBadge(status) {
-  const map = {
-    good: '🟢 우수',
-    warning: '🟡 검토 필요',
-    missing: '🔴 미입력',
-    normal: '⚪ 보통',
-  };
-  return map[status] || map.normal;
-}
-
-function statusEmoji(status) {
-  return ({ good: '🟢', warning: '🟡', missing: '🔴', normal: '⚪' })[status] || '⚪';
-}
-
-function deltaSpan(v) {
-  if (v === null || v === undefined || isNaN(v)) return '';
-  const sign = v >= 0 ? '+' : '';
-  const cls = v >= 0 ? 'up' : 'down';
-  return `<div class="store-kpi-sub ${cls}">${sign}${v}%p vs 평균</div>`;
+function statusIcon(status) {
+  return ({ good: '✓', warning: '!', missing: '!', normal: '·' })[status] || '·';
 }
 
 function renderStoreList(data) {
@@ -586,7 +842,6 @@ function renderStoreList(data) {
   if (filter !== 'all') {
     stores = stores.filter(s => s.status === filter);
   }
-
   if (stores.length === 0) {
     $('storeList').innerHTML = `
       <div style="padding: 40px 20px; text-align: center; color: var(--text-light); font-size: 13px;">
@@ -595,153 +850,61 @@ function renderStoreList(data) {
     `;
     return;
   }
-
-  $('storeList').innerHTML = stores.map(s => renderStoreCard(s)).join('');
-
-  // 버튼 이벤트 바인딩
-  document.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.action;
-      const storeName = btn.dataset.store;
-      const storeId = btn.dataset.id;
-      if (action === 'sendReminder') handleSendReminder(storeName, storeId);
-      else if (action === 'sendReport') handleSendReport(storeName, storeId);
-      else if (action === 'openReport') openSVReport(storeName);
+  $('storeList').innerHTML = stores.map((s, i) => renderStoreRow(s, i)).join('');
+  document.querySelectorAll('[data-store-idx]').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.storeIdx, 10);
+      openDetail(stores[idx]);
     });
   });
 }
 
-function renderStoreCard(s) {
-  const meta = [s.region, s.zone, s.operation].filter(Boolean).join(' · ');
-
+function renderStoreRow(s, idx) {
   if (!s.hasData) {
-    // 미입력 매장
-    const lastInfo = s.lastSubmittedMonth
-      ? `마지막 입력: ${s.lastSubmittedMonth}`
-      : '한 번도 입력 이력 없음';
+    const lastInfo = s.lastSubmittedMonth ? `마지막 ${s.lastSubmittedMonth}` : '입력 이력 없음';
     return `
-      <div class="store-card ${s.status}">
-        <div class="store-head">
-          <div class="store-head-left">
-            <span class="store-emoji">${statusEmoji(s.status)}</span>
-            <span class="store-name">${escapeHtml(s.name)}</span>
-            <span class="store-id">${s.id ? '#' + escapeHtml(s.id) : ''}</span>
+      <div class="store-row missing" data-store-idx="${idx}">
+        <div class="store-row-status missing">!</div>
+        <div class="store-row-main">
+          <div class="store-row-top">
+            <span class="store-row-name">${escapeHtml(s.name)}</span>
+            ${s.id ? `<span class="store-row-id">#${escapeHtml(s.id)}</span>` : ''}
           </div>
-          <span class="store-badge ${s.status}">미입력</span>
+          <div class="store-row-stats">
+            <span class="missing-text">미입력</span>
+            <span>·</span>
+            <span>${escapeHtml(lastInfo)}</span>
+          </div>
         </div>
-        <div class="store-meta">${escapeHtml(meta || '정보 없음')}</div>
-        <div class="store-missing-info">📅 이번 달 회계일보가 아직 도착하지 않았어요.<br>${escapeHtml(lastInfo)}</div>
-        <div class="store-actions">
-          <button class="btn btn-alert" data-action="sendReminder" data-store="${escapeHtml(s.name)}" data-id="${escapeHtml(s.id)}">
-            📱 입력 독려 알림 보내기
-          </button>
-        </div>
+        <div class="store-row-arrow">›</div>
       </div>
     `;
   }
 
-  // 입력 완료 매장
-  const issuesHtml = s.issues && s.issues.length > 0
-    ? `<div class="store-issues">${s.issues.map(i => `<div class="issue">${escapeHtml(i)}</div>`).join('')}</div>`
-    : '';
+  const deltaCls = s.vsAvgOpRatio >= 0 ? 'up' : 'down';
+  const deltaSign = s.vsAvgOpRatio >= 0 ? '+' : '';
+  const opLabel = s.operation ? `<span class="store-row-op">${escapeHtml(s.operation)}</span>` : '';
 
   return `
-    <div class="store-card ${s.status}">
-      <div class="store-head">
-        <div class="store-head-left">
-          <span class="store-emoji">${statusEmoji(s.status)}</span>
-          <span class="store-name">${escapeHtml(s.name)}</span>
-          <span class="store-id">${s.id ? '#' + escapeHtml(s.id) : ''}</span>
+    <div class="store-row ${s.status}" data-store-idx="${idx}">
+      <div class="store-row-status ${s.status}">${statusIcon(s.status)}</div>
+      <div class="store-row-main">
+        <div class="store-row-top">
+          <span class="store-row-name">${escapeHtml(s.name)}</span>
+          ${s.id ? `<span class="store-row-id">#${escapeHtml(s.id)}</span>` : ''}
+          ${opLabel}
         </div>
-        <span class="store-badge ${s.status}">${statusBadge(s.status).replace(/^[🟢🟡🔴⚪]\s/, '')}</span>
-      </div>
-      <div class="store-meta">${escapeHtml(meta)}</div>
-
-      <div class="store-kpi">
-        <div class="store-kpi-cell">
-          <div class="store-kpi-label">월 매출</div>
-          <div class="store-kpi-value">${wonM(s.revenue)}원</div>
-          <div class="store-kpi-sub">${won(s.revenue)}</div>
-        </div>
-        <div class="store-kpi-cell">
-          <div class="store-kpi-label">영업이익률</div>
-          <div class="store-kpi-value">${pct(s.operatingRatio)}</div>
-          ${deltaSpan(s.vsAvgOpRatio)}
-        </div>
-        <div class="store-kpi-cell">
-          <div class="store-kpi-label">영업이익</div>
-          <div class="store-kpi-value">${wonM(s.operatingProfit)}원</div>
-        </div>
-        <div class="store-kpi-cell">
-          <div class="store-kpi-label">순이익률</div>
-          <div class="store-kpi-value">${pct(s.netRatio)}</div>
-          ${deltaSpan(s.vsAvgNetRatio)}
+        <div class="store-row-stats">
+          <span class="stat-revenue">${wonM(s.revenue)}원</span>
+          <span>·</span>
+          <span class="stat-op">${pct(s.operatingRatio)}</span>
+          <span class="delta ${deltaCls}">${deltaSign}${s.vsAvgOpRatio}%p</span>
+          ${s.issues && s.issues.length > 0 ? `<span style="color:var(--warn);">⚠</span>` : ''}
         </div>
       </div>
-
-      ${issuesHtml}
-
-      <div class="store-actions">
-        <button class="btn btn-secondary" data-action="openReport" data-store="${escapeHtml(s.name)}">
-          📊 SV 리포트
-        </button>
-        <button class="btn btn-primary" data-action="sendReport" data-store="${escapeHtml(s.name)}" data-id="${escapeHtml(s.id)}">
-          📱 점주 발송
-        </button>
-      </div>
+      <div class="store-row-arrow">›</div>
     </div>
   `;
-}
-
-// ═══════════════════════════════════════════════════════════
-// 액션 핸들러
-// ═══════════════════════════════════════════════════════════
-function openSVReport(storeName) {
-  const month = DATA.month;
-  const url = `${REPORT_BASE}/sv-report.html?store=${encodeURIComponent(storeName)}&month=${encodeURIComponent(month)}`;
-  window.open(url, '_blank');
-}
-
-function handleSendReminder(storeName, storeId) {
-  openModal({
-    icon: '📱',
-    title: '입력 독려 알림 보내기',
-    msg: `<strong>${escapeHtml(storeName)}</strong> 매장 점주에게<br>
-          비용 입력 독려 알림톡을 보낼까요?<br><br>
-          <span style="color:var(--text-light);font-size:11px;">건당 ~10원의 알림톡 비용이 발생해요.</span>`,
-    confirm: '독려 보내기',
-    confirmClass: 'btn-alert',
-    onConfirm: async () => {
-      try {
-        showToast(`${storeName} 알림톡 발송 중…`);
-        const result = await callAction('sendReminder', storeName, DATA.month);
-        showToast(`✅ ${storeName} 독려 알림 발송 완료`, 'success');
-      } catch (err) {
-        showToast(`❌ ${err.message || '발송 실패'}`, 'error');
-      }
-    },
-  });
-}
-
-function handleSendReport(storeName, storeId) {
-  openModal({
-    icon: '📊',
-    title: '점주 리포트 발송',
-    msg: `<strong>${escapeHtml(storeName)}</strong> 매장 점주에게<br>
-          이번 달 리포트 알림톡을 보낼까요?<br><br>
-          <span style="color:var(--text-light);font-size:11px;">점주는 본인 토큰이 포함된 가맹점 리포트 URL을 받아요.</span>`,
-    confirm: '리포트 발송',
-    confirmClass: 'btn-primary',
-    onConfirm: async () => {
-      try {
-        showToast(`${storeName} 리포트 발송 중…`);
-        const result = await callAction('sendReport', storeName, DATA.month);
-        showToast(`✅ ${storeName} 점주 리포트 발송 완료`, 'success');
-      } catch (err) {
-        showToast(`❌ ${err.message || '발송 실패'}`, 'error');
-      }
-    },
-  });
 }
 
 // ═══════════════════════════════════════════════════════════
